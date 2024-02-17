@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "xarray-selafin-backend"
+version = "0.1.0"
+description = ""
+authors = ["tomsail <saillour.thomas@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+xarray = "*"
+numpy = "*"
+dask = "*"
+scipy = "*"
+entrypoints = "^0.4"
+matplotlib = "^3.8.3"
+
+[tool.poetry.plugins."xarray.backends"]
+selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
