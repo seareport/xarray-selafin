@@ -5,7 +5,7 @@ description = ""
 authors = ["tomsail <saillour.thomas@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9"
 xarray = "*"
 numpy = "*"
 dask = "*"
