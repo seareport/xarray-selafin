@@ -1,7 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 
-file_3d = 'data/r3d_tidal_flats.slf'
+file_3d = 'tests/data/r3d_tidal_flats.slf'
 
 # read test
 ds = xr.open_dataset(file_3d, engine='selafin')

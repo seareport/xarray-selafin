@@ -16,6 +16,8 @@ selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "*"
+pytest = "*"
+netcdf4 = "*"
 
 [build-system]
 requires = ["poetry-core"]
