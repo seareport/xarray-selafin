@@ -1,13 +1,13 @@
 from xarray.backends import BackendEntrypoint
 from xarray.backends import BackendArray
-from xarray.core.indexing import LazilyIndexedArray
 from xarray.core import indexing
 import dask.array as da
 import numpy as np
 import xarray as xr
 import os 
-from .selafin_io_pp import *
 import logging
+
+from .selafin_io_pp import ppSELAFIN
 
 
 class SelafinLazyArray(BackendArray):
