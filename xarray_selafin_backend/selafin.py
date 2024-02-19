@@ -7,13 +7,67 @@ Contains the class Selafin
 # ~~> dependencies towards standard python
 from struct import unpack, pack, error
 import numpy as np
-from data_manip.extraction.parser_selafin import (
-    get_endian_from_char,
-    get_float_type_from_float,
-)
-from utils.progressbar import ProgressBar
 from scipy.spatial import cKDTree
 from matplotlib.tri import Triangulation
+
+
+def get_endian_from_char(f, nchar):
+    """
+    Returns endianess of the file by trying to read a value in the file and
+    comparing it to nchar
+
+    @param f (file descriptor) File descriptor
+    @param nchar (string) String to compare to
+
+    @returns (string) String for endianess ("<" for little ">" for big)
+    """
+    pointer = f.tell()
+    endian = ">"  # "<" means little-endian, ">" means big-endian
+    ll, _, chk = unpack(endian + "i" + str(nchar) + "si", f.read(4 + nchar + 4))
+    if chk != nchar:
+        endian = "<"
+        f.seek(pointer)
+        ll, _, chk = unpack(endian + "i" + str(nchar) + "si", f.read(4 + nchar + 4))
+    if ll != chk:
+        raise ValueError(
+            "... Cannot read {} characters from your binary file"
+            "    +> Maybe it is the wrong file format ?"
+            "".format(str(nchar))
+        )
+    f.seek(pointer)
+    return endian
+
+
+def get_float_type_from_float(f, endian, nfloat):
+    """
+    Identifies float precision from the file (single or double)
+
+    @param f (file descriptor) File descriptor
+    @param endian (string) Endianess type ("<" for little ">" for big)
+    @param nfloat (float) Float to compare to
+
+    @return (string, integer) Returns the string to be used for readinf ans the
+    number of byte on which the float is encoded ('f', 4) for single ('d',8)
+    for double precision
+
+    """
+    pointer = f.tell()
+    ifloat = 4
+    cfloat = "f"
+    ll = unpack(endian + "i", f.read(4))
+    if ll[0] != ifloat * nfloat:
+        ifloat = 8
+        cfloat = "d"
+    _ = unpack(endian + str(nfloat) + cfloat, f.read(ifloat * nfloat))
+    chk = unpack(endian + "i", f.read(4))
+    if ll != chk:
+        raise ValueError(
+            "... Cannot read {} floats from your binary file"
+            "     +> Maybe it is the wrong file format ?"
+            "".format(str(nfloat))
+        )
+    f.seek(pointer)
+    return cfloat, ifloat
 
 
 class Selafin(object):
@@ -390,28 +444,21 @@ class Selafin(object):
             f.write(pack(endian + str(self.npoin3) + ftype, *(var)))
             f.write(pack(endian + "i", fsize * self.npoin3))
 
-    def put_content(self, file_name, showbar=True):
+    def put_content(self, file_name):
         """
         Write content of the object into a Serafin file
 
         @param file_name (string) Name of the serafin file
-        @param showbar (boolean) If True displays a showbar
         """
         self.fole.update({"name": file_name})
         self.fole.update({"hook": open(file_name, "wb")})
         ibar = 0
-        if showbar:
-            pbar = ProgressBar(maxval=len(self.tags["times"])).start()
         self.append_header_slf()
         for time in range(len(self.tags["times"])):
             ibar += 1
             self.append_core_time_slf(time)
             self.append_core_vars_slf(self.get_values(time))
-            if showbar:
-                pbar.update(ibar)
         self.fole["hook"].close()
-        if showbar:
-            pbar.finish()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #   Tool Box
@@ -434,14 +481,13 @@ class Selafin(object):
                     )
         return varsor
 
-    def get_series(self, nodes, vars_indexes=None, showbar=True):
+    def get_series(self, nodes, vars_indexes=None):
         """
         Return the value for a list of nodes on variables given in vars_indexes
         for each time step
 
         @param nodes (list) list of nodes for which to extract data
         @param vars_indexes (list) List of variables to extract data for
-        @param showbar (boolean) If True display a showbar for the progress
 
         """
         f = self.file["hook"]
@@ -469,13 +515,9 @@ class Selafin(object):
                 dtype=np.float64,
             )
         f.seek(self.tags["cores"][0])
-        if showbar:
-            pbar = ProgressBar(maxval=len(self.tags["cores"])).start()
         for time in range(len(self.tags["cores"])):
             f.seek(self.tags["cores"][time])
             f.seek(4 + fsize + 4, 1)
-            if showbar:
-                pbar.update(time)
             for ivar in range(self.nvar):
                 f.seek(4, 1)
                 if ivar in vars_indexes:
@@ -494,8 +536,6 @@ class Selafin(object):
                 else:
                     f.seek(fsize * self.npoin3, 1)
                 f.seek(4, 1)
-        if showbar:
-            pbar.finish()
         return z
 
     def set_kd_tree(self, reset=False):
