@@ -9,8 +9,6 @@ python = ">=3.9,<3.12"
 xarray = "*"
 numpy = "*"
 dask = "*"
-scipy = "*"
-entrypoints = "^0.4"
 matplotlib = "^3.8.3"
 
 [tool.poetry.plugins."xarray.backends"]
