@@ -9,10 +9,13 @@ python = ">=3.9"
 xarray = "*"
 numpy = "*"
 dask = "*"
-matplotlib = "^3.8.3"
 
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
+
+
+[tool.poetry.group.dev.dependencies]
+matplotlib = "*"
 
 [build-system]
 requires = ["poetry-core"]
