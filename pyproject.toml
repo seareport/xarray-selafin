@@ -6,8 +6,12 @@ authors = ["tomsail <saillour.thomas@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-xarray = "*"
 numpy = "*"
+pytest = "*"
+scipy = "*"
+shapely = "*"
+xarray = "*"
+dask = { version = "*", optional = true }
 
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
@@ -15,7 +19,6 @@ selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "*"
-pytest = "*"
 netcdf4 = "*"
 
 [build-system]
