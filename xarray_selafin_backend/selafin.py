@@ -71,7 +71,7 @@ def get_float_type_from_float(f, endian, nfloat):
 
 
 class Selafin(object):
-    """(DOXYGEN parsing)
+    """                                 (DOXYGEN parsing)
     Class Selafin
 
     @brief
@@ -104,30 +104,29 @@ class Selafin(object):
         @param file_name (string) Name of the file
         """
         self.file = {}
-        self.file.update({"name": file_name})
+        self.file.update({'name': file_name})
         # "<" means little-endian, ">" means big-endian
-        self.file.update({"endian": ">"})
-        self.file.update({"float": ("f", 4)})  # 'f' size 4, 'd' = size 8
-        if file_name != "":
-            self.file.update({"hook": open(file_name, "rb")})
+        self.file.update({'endian': ">"})
+        self.file.update({'float': ('f', 4)})  # 'f' size 4, 'd' = size 8
+        if file_name != '':
+            self.file.update({'hook': open(file_name, 'rb')})
             # ~~> checks endian encoding
-            self.file["endian"] = get_endian_from_char(self.file["hook"], 80)
+            self.file['endian'] = get_endian_from_char(self.file['hook'], 80)
             # ~~> header parameters
-            self.tags = {"meta": self.file["hook"].tell()}
+            self.tags = {'meta': self.file['hook'].tell()}
             self.get_header_metadata_slf()
             # ~~> sizes and connectivity
             self.get_header_integers_slf()
             # ~~> checks float encoding
-            self.file["float"] = get_float_type_from_float(
-                self.file["hook"], self.file["endian"], self.npoin3
-            )
+            self.file['float'] = get_float_type_from_float(
+                      self.file['hook'], self.file['endian'], self.npoin3)
             # ~~> xy mesh
             self.get_header_floats_slf()
             # ~~> time series
-            self.tags = {"cores": [], "times": []}
+            self.tags = {'cores': [], 'times': []}
             self.get_time_history_slf()
         else:
-            self.title = ""
+            self.title = ''
             self.nbv1 = 0
             self.nbv2 = 0
             self.nvar = self.nbv1 + self.nbv2
@@ -150,12 +149,12 @@ class Selafin(object):
             self.ipob3 = []
             self.meshx = []
             self.meshy = []
-            self.tags = {"cores": [], "times": []}
+            self.tags = {'cores': [], 'times': []}
             self.datetime = np.asarray([1972, 7, 13, 17, 15, 13])
         self.fole = {}
-        self.fole.update({"name": ""})
-        self.fole.update({"endian": self.file["endian"]})
-        self.fole.update({"float": self.file["float"]})
+        self.fole.update({'name': ''})
+        self.fole.update({'endian': self.file['endian']})
+        self.fole.update({'float': self.file['float']})
         self.tree = None
         self.neighbours = None
         self.edges = None
@@ -170,47 +169,46 @@ class Selafin(object):
         """
         Reads title, variable names and units, date and time
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
+        f = self.file['hook']
+        endian = self.file['endian']
         # ~~ Read title ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        _, tmp, _ = unpack(endian + "i80si", f.read(4 + 80 + 4))
-        self.title = tmp.decode("utf-8")
+        _, tmp, _ = unpack(endian+'i80si', f.read(4+80+4))
+        self.title = tmp.decode('utf-8')
         # ~~ Read nbv(1) and nbv(2) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        _, self.nbv1, self.nbv2, _ = unpack(endian + "iiii", f.read(4 + 8 + 4))
+        _, self.nbv1, self.nbv2, _ = unpack(endian+'iiii', f.read(4+8+4))
         self.nvar = self.nbv1 + self.nbv2
         self.varindex = range(self.nvar)
         # ~~ Read variable names and units ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.varnames = []
         self.varunits = []
         for _ in range(self.nbv1):
-            _, name, unit, _ = unpack(endian + "i16s16si", f.read(4 + 16 + 16 + 4))
-            self.varnames.append(name.decode("utf8"))
-            self.varunits.append(unit.decode("utf8"))
+            _, name, unit, _ = unpack(endian+'i16s16si', f.read(4+16+16+4))
+            self.varnames.append(name.decode('utf8'))
+            self.varunits.append(unit.decode('utf8'))
         self.cldnames = []
         self.cldunits = []
         for _ in range(self.nbv2):
-            _, name, unit, _ = unpack(endian + "i16s16si", f.read(4 + 16 + 16 + 4))
-            self.cldnames.append(name.decode("utf8"))
-            self.cldunits.append(unit.decode("utf8"))
+            _, name, unit, _ = unpack(endian+'i16s16si', f.read(4+16+16+4))
+            self.cldnames.append(name.decode('utf8'))
+            self.cldunits.append(unit.decode('utf8'))
         # ~~ Read iparam array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        dummy = unpack(endian + "12i", f.read(4 + 40 + 4))
+        dummy = unpack(endian+'12i', f.read(4+40+4))
         self.iparam = np.asarray(dummy[1:11])
         # ~~ Read DATE/TIME array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.datetime = np.asarray([1972, 7, 13, 17, 15, 13])
         if self.iparam[9] == 1:
-            dummy = unpack(endian + "8i", f.read(4 + 24 + 4))
+            dummy = unpack(endian+'8i', f.read(4+24+4))
             self.datetime = np.asarray(dummy[1:9])
 
     def get_header_integers_slf(self):
         """
         Reads nelem, npoin, ndp3, nplan, ikle and ipobo
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
+        f = self.file['hook']
+        endian = self.file['endian']
         # ~~ Read nelem3, npoin3, ndp3, nplan ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        _, self.nelem3, self.npoin3, self.ndp3, self.nplan, _ = unpack(
-            endian + "6i", f.read(4 + 16 + 4)
-        )
+        _, self.nelem3, self.npoin3, self.ndp3, self.nplan, _ = \
+            unpack(endian+'6i', f.read(4+16+4))
         self.nelem2 = self.nelem3
         self.npoin2 = self.npoin3
         self.ndp2 = self.ndp3
@@ -222,62 +220,49 @@ class Selafin(object):
             self.ndp2 = self.ndp3 // 2
         # ~~ Read the ikle array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         f.seek(4, 1)
-        self.ikle3 = (
-            np.array(
-                unpack(
-                    endian + str(self.nelem3 * self.ndp3) + "I",
-                    f.read(4 * self.nelem3 * self.ndp3),
-                )
-            )
-            - 1
-        )
+        self.ikle3 = np.array(unpack(endian+str(self.nelem3*self.ndp3)+'I',
+                                     f.read(4*self.nelem3*self.ndp3))) - 1
         f.seek(4, 1)
         self.ikle3 = self.ikle3.reshape((self.nelem3, self.ndp3))
         if self.nplan > 1:
-            self.ikle2 = np.compress(
-                np.repeat([True, False], self.ndp2), self.ikle3[0 : self.nelem2], axis=1
-            )
+            self.ikle2 = np.compress(np.repeat([True, False], self.ndp2),
+                                     self.ikle3[0:self.nelem2], axis=1)
         else:
             self.ikle2 = self.ikle3
         # ~~ Read the ipobo array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         f.seek(4, 1)
-        self.ipob3 = np.asarray(
-            unpack(endian + str(self.npoin3) + "i", f.read(4 * self.npoin3))
-        )
+        self.ipob3 = np.asarray(unpack(endian+str(self.npoin3)+'i',
+                                       f.read(4*self.npoin3)))
         f.seek(4, 1)
-        self.ipob2 = self.ipob3[0 : self.npoin2]
+        self.ipob2 = self.ipob3[0:self.npoin2]
 
     def get_header_floats_slf(self):
         """
         Reads the mesh coordinates
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
+        f = self.file['hook']
+        endian = self.file['endian']
         # ~~ Read the x-coordinates of the nodes ~~~~~~~~~~~~~~~~~~
-        ftype, fsize = self.file["float"]
+        ftype, fsize = self.file['float']
         f.seek(4, 1)
         self.meshx = np.asarray(
-            unpack(endian + str(self.npoin3) + ftype, f.read(fsize * self.npoin3))[
-                0 : self.npoin2
-            ]
-        )
+                unpack(endian+str(self.npoin3)+ftype,
+                       f.read(fsize*self.npoin3))[0:self.npoin2])
         f.seek(4, 1)
         # ~~ Read the y-coordinates of the nodes ~~~~~~~~~~~~~~~~~~
         f.seek(4, 1)
         self.meshy = np.asarray(
-            unpack(endian + str(self.npoin3) + ftype, f.read(fsize * self.npoin3))[
-                0 : self.npoin2
-            ]
-        )
+                unpack(endian+str(self.npoin3)+ftype,
+                       f.read(fsize*self.npoin3))[0:self.npoin2])
         f.seek(4, 1)
 
     def get_time_history_slf(self):
         """
         Reads all result values
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
-        ftype, fsize = self.file["float"]
+        f = self.file['hook']
+        endian = self.file['endian']
+        ftype, fsize = self.file['float']
         ats = []
         att = []
         while True:
@@ -285,15 +270,15 @@ class Selafin(object):
                 att.append(f.tell())
                 # ~~ Read AT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 f.seek(4, 1)
-                ats.append(unpack(endian + ftype, f.read(fsize))[0])
+                ats.append(unpack(endian+ftype, f.read(fsize))[0])
                 f.seek(4, 1)
                 # ~~ Skip Values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                f.seek(self.nvar * (4 + fsize * self.npoin3 + 4), 1)
+                f.seek(self.nvar*(4+fsize*self.npoin3+4), 1)
             except error:
-                att.pop(len(att) - 1)  # since the last record failed the try
+                att.pop(len(att)-1)   # since the last record failed the try
                 break
-        self.tags.update({"cores": att})
-        self.tags.update({"times": np.asarray(ats)})
+        self.tags.update({'cores': att})
+        self.tags.update({'times': np.asarray(ats)})
 
     def get_variables_at(self, frame, vars_indexes):
         """
@@ -304,26 +289,26 @@ class Selafin(object):
 
         @return (np.array) array containg the values for each variable
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
-        ftype, fsize = self.file["float"]
+        f = self.file['hook']
+        endian = self.file['endian']
+        ftype, fsize = self.file['float']
         if fsize == 4:
             z = np.zeros((len(vars_indexes), self.npoin3), dtype=np.float32)
         else:
             z = np.zeros((len(vars_indexes), self.npoin3), dtype=np.float64)
         # if tags has 31 frames, len(tags)=31 from 0 to 30,
         # then frame should be >= 0 and < len(tags)
-        if frame < len(self.tags["cores"]) and frame >= 0:
-            f.seek(self.tags["cores"][frame])
-            f.seek(4 + fsize + 4, 1)
+        if frame < len(self.tags['cores']) and frame >= 0:
+            f.seek(self.tags['cores'][frame])
+            f.seek(4+fsize+4, 1)
             for ivar in range(self.nvar):
                 f.seek(4, 1)
                 if ivar in vars_indexes:
-                    z[vars_indexes.index(ivar)] = unpack(
-                        endian + str(self.npoin3) + ftype, f.read(fsize * self.npoin3)
-                    )
+                    z[vars_indexes.index(ivar)] = \
+                              unpack(endian+str(self.npoin3)+ftype,
+                                     f.read(fsize*self.npoin3))
                 else:
-                    f.seek(fsize * self.npoin3, 1)
+                    f.seek(fsize*self.npoin3, 1)
                 f.seek(4, 1)
         return z
 
@@ -331,19 +316,19 @@ class Selafin(object):
         """
         Alter Endian for the file
         """
-        if self.fole["endian"] == ">":
-            self.fole["endian"] = "<"
+        if self.fole['endian'] == ">":
+            self.fole['endian'] = "<"
         else:
-            self.fole["endian"] = ">"
+            self.fole['endian'] = ">"
 
     def alter_float(self):
         """
         Alter the precision for float
         """
-        if self.fole["float"] == ("f", 4):
-            self.fole["float"] = ("d", 8)
+        if self.fole['float'] == ('f', 4):
+            self.fole['float'] = ('d', 8)
         else:
-            self.fole["float"] = ("f", 4)
+            self.fole['float'] = ('f', 4)
 
     def alter_values(self, vrs=None, m_z=1, p_z=0):
         """
@@ -352,65 +337,64 @@ class Selafin(object):
         if vrs is not None:
             self.alter_zm = m_z
             self.alter_zp = p_z
-            self.alter_z_names = vrs.split(":")
+            self.alter_z_names = vrs.split(':')
 
     def append_header_slf(self):
         """
         Write the header part of the file
         """
-        f = self.fole["hook"]
-        endian = self.fole["endian"]
-        ftype, fsize = self.fole["float"]
+        nplan = max(1, self.nplan)
+        f = self.fole['hook']
+        endian = self.fole['endian']
+        ftype, fsize = self.fole['float']
         # ~~ Write title ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "i80si", 80, self.title.encode("utf8"), 80))
+        f.write(pack(endian+'i80si', 80, self.title.encode('utf8'), 80))
         # ~~ Write nbv(1) and nbv(2) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "iiii", 4 + 4, self.nbv1, self.nbv2, 4 + 4))
+        f.write(pack(endian+'iiii', 4+4, self.nbv1, self.nbv2, 4+4))
         # ~~ Write variable names and units ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         for i in range(self.nbv1):
-            f.write(pack(endian + "i", 32))
-            f.write(pack(endian + "16s", self.varnames[i].encode("utf8")))
-            f.write(pack(endian + "16s", self.varunits[i].encode("utf8")))
-            f.write(pack(endian + "i", 32))
+            f.write(pack(endian+'i', 32))
+            f.write(pack(endian+'16s', self.varnames[i].encode('utf8')))
+            f.write(pack(endian+'16s', self.varunits[i].encode('utf8')))
+            f.write(pack(endian+'i', 32))
         for i in range(self.nbv2):
-            f.write(pack(endian + "i", 32))
-            f.write(pack(endian + "16s", self.cldnames[i]))
-            f.write(pack(endian + "16s", self.cldunits[i]))
-            f.write(pack(endian + "i", 32))
+            f.write(pack(endian+'i', 32))
+            f.write(pack(endian+'16s', self.cldnames[i]))
+            f.write(pack(endian+'16s', self.cldunits[i]))
+            f.write(pack(endian+'i', 32))
         # ~~ Write iparam array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "i", 4 * 10))
+        f.write(pack(endian+'i', 4*10))
         for i in range(len(self.iparam)):
-            f.write(pack(endian + "i", self.iparam[i]))
-        f.write(pack(endian + "i", 4 * 10))
+            f.write(pack(endian+'i', self.iparam[i]))
+        f.write(pack(endian+'i', 4*10))
         # ~~ Write DATE/TIME array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if self.iparam[9] == 1:
-            f.write(pack(endian + "i", 4 * 6))
+            f.write(pack(endian+'i', 4*6))
             for i in range(6):
-                f.write(pack(endian + "i", self.datetime[i]))
-            f.write(pack(endian + "i", 4 * 6))
+                f.write(pack(endian+'i', self.datetime[i]))
+            f.write(pack(endian+'i', 4*6))
         # ~~ Write nelem3, npoin3, ndp3, nplan ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(
-            pack(endian + "6i", 4 * 4, self.nelem3, self.npoin3, self.ndp3, 1, 4 * 4)
-        )
+        f.write(pack(endian+'6i', 4*4, self.nelem3, self.npoin3,
+                     self.ndp3, 1, 4*4))
         # ~~ Write the ikle array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "I", 4 * self.nelem3 * self.ndp3))
-        f.write(
-            pack(endian + str(self.nelem3 * self.ndp3) + "I", *(self.ikle3.ravel() + 1))
-        )
-        f.write(pack(endian + "I", 4 * self.nelem3 * self.ndp3))
+        f.write(pack(endian+'I', 4*self.nelem3*self.ndp3))
+        f.write(pack(endian+str(self.nelem3*self.ndp3)+'I',
+                     *(self.ikle3.ravel()+1)))
+        f.write(pack(endian+'I', 4*self.nelem3*self.ndp3))
         # ~~ Write the ipobo array ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "i", 4 * self.npoin3))
-        f.write(pack(endian + str(self.npoin3) + "i", *(self.ipob3)))
-        f.write(pack(endian + "i", 4 * self.npoin3))
+        f.write(pack(endian+'i', 4*self.npoin3))
+        f.write(pack(endian+str(self.npoin3)+'i', *(self.ipob3)))
+        f.write(pack(endian+'i', 4*self.npoin3))
         # ~~ Write the x-coordinates of the nodes ~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "i", fsize * self.npoin3))
-        for i in range(self.nplan):
-            f.write(pack(endian + str(self.npoin2) + ftype, *(self.meshx)))
-        f.write(pack(endian + "i", fsize * self.npoin3))
+        f.write(pack(endian+'i', fsize*self.npoin3))
+        for i in range(nplan):
+            f.write(pack(endian+str(self.npoin2)+ftype, *(self.meshx)))
+        f.write(pack(endian+'i', fsize*self.npoin3))
         # ~~ Write the y-coordinates of the nodes ~~~~~~~~~~~~~~~~~~~~~~~
-        f.write(pack(endian + "i", fsize * self.npoin3))
-        for i in range(self.nplan):
-            f.write(pack(endian + str(self.npoin2) + ftype, *(self.meshy)))
-        f.write(pack(endian + "i", fsize * self.npoin3))
+        f.write(pack(endian+'i', fsize*self.npoin3))
+        for i in range(nplan):
+            f.write(pack(endian+str(self.npoin2)+ftype, *(self.meshy)))
+        f.write(pack(endian+'i', fsize*self.npoin3))
 
     def append_core_time_slf(self, time):
         """
@@ -418,16 +402,15 @@ class Selafin(object):
 
         @param time (float) Time value
         """
-        f = self.fole["hook"]
-        endian = self.fole["endian"]
-        ftype, fsize = self.fole["float"]
+        f = self.fole['hook']
+        endian = self.fole['endian']
+        ftype, fsize = self.fole['float']
         # Print time record
         if isinstance(time, type(0.0)):
-            f.write(pack(endian + "i" + ftype + "i", fsize, time, fsize))
+            f.write(pack(endian+'i'+ftype+'i', fsize, time, fsize))
         else:
-            f.write(
-                pack(endian + "i" + ftype + "i", fsize, self.tags["times"][time], fsize)
-            )
+            f.write(pack(endian+'i'+ftype+'i', fsize, self.tags['times'][time],
+                         fsize))
 
     def append_core_vars_slf(self, varsor):
         """
@@ -435,14 +418,14 @@ class Selafin(object):
 
         @param varsor (list) List of value for each variable
         """
-        f = self.fole["hook"]
-        endian = self.fole["endian"]
-        ftype, fsize = self.fole["float"]
+        f = self.fole['hook']
+        endian = self.fole['endian']
+        ftype, fsize = self.fole['float']
         # Print variable records
         for var in varsor:
-            f.write(pack(endian + "i", fsize * self.npoin3))
-            f.write(pack(endian + str(self.npoin3) + ftype, *(var)))
-            f.write(pack(endian + "i", fsize * self.npoin3))
+            f.write(pack(endian+'i', fsize*self.npoin3))
+            f.write(pack(endian+str(self.npoin3)+ftype, *(var)))
+            f.write(pack(endian+'i', fsize*self.npoin3))
 
     def put_content(self, file_name):
         """
@@ -450,15 +433,13 @@ class Selafin(object):
 
         @param file_name (string) Name of the serafin file
         """
-        self.fole.update({"name": file_name})
-        self.fole.update({"hook": open(file_name, "wb")})
-        ibar = 0
+        self.fole.update({'name': file_name})
+        self.fole.update({'hook': open(file_name, 'wb')})
         self.append_header_slf()
-        for time in range(len(self.tags["times"])):
-            ibar += 1
+        for time in range(len(self.tags['times'])):
             self.append_core_time_slf(time)
             self.append_core_vars_slf(self.get_values(time))
-        self.fole["hook"].close()
+        self.fole['hook'].close()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #   Tool Box
@@ -476,9 +457,9 @@ class Selafin(object):
                     varsor[var] = self.alter_zm * varsor[var] + self.alter_zp
             for var in range(len(self.cldnames)):
                 if alter_var.lower() in self.cldnames[var].lower():
-                    varsor[var + self.nbv1] = (
-                        self.alter_zm * varsor[var + self.nbv1] + self.alter_zp
-                    )
+                    varsor[var+self.nbv1] = \
+                            self.alter_zm * varsor[var+self.nbv1] +\
+                            self.alter_zp
         return varsor
 
     def get_series(self, nodes, vars_indexes=None):
@@ -490,51 +471,44 @@ class Selafin(object):
         @param vars_indexes (list) List of variables to extract data for
 
         """
-        f = self.file["hook"]
-        endian = self.file["endian"]
-        ftype, fsize = self.file["float"]
+        f = self.file['hook']
+        endian = self.file['endian']
+        ftype, fsize = self.file['float']
         if vars_indexes is None:
             vars_indexes = self.varindex
         # ~~ Ordering the nodes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # This assumes that nodes starts at 1
-        onodes = np.sort(
-            np.array(
-                list(zip(range(len(nodes)), nodes)), dtype=[("0", int), ("1", int)]
-            ),
-            order="1",
-        )
+        onodes = np.sort(np.array(list(zip(range(len(nodes)), nodes)),
+                                  dtype=[('0', int), ('1', int)]),
+                         order='1')
         # ~~ Extract time profiles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if fsize == 4:
-            z = np.zeros(
-                (len(vars_indexes), len(nodes), len(self.tags["cores"])),
-                dtype=np.float32,
-            )
+            z = np.zeros((len(vars_indexes), len(nodes),
+                          len(self.tags['cores'])),
+                         dtype=np.float32)
         else:
-            z = np.zeros(
-                (len(vars_indexes), len(nodes), len(self.tags["cores"])),
-                dtype=np.float64,
-            )
-        f.seek(self.tags["cores"][0])
-        for time in range(len(self.tags["cores"])):
-            f.seek(self.tags["cores"][time])
-            f.seek(4 + fsize + 4, 1)
+            z = np.zeros((len(vars_indexes), len(nodes),
+                          len(self.tags['cores'])),
+                         dtype=np.float64)
+        f.seek(self.tags['cores'][0])
+        for time in range(len(self.tags['cores'])):
+            f.seek(self.tags['cores'][time])
+            f.seek(4+fsize+4, 1)
             for ivar in range(self.nvar):
                 f.seek(4, 1)
                 if ivar in vars_indexes:
                     jnod = onodes[0]
-                    f.seek(fsize * (jnod[1] - 1), 1)
-                    z[vars_indexes.index(ivar), jnod[0], time] = unpack(
-                        endian + ftype, f.read(fsize)
-                    )[0]
+                    f.seek(fsize*(jnod[1]-1), 1)
+                    z[vars_indexes.index(ivar), jnod[0], time] = \
+                        unpack(endian+ftype, f.read(fsize))[0]
                     for inod in onodes[1:]:
-                        f.seek(fsize * (inod[1] - jnod[1] - 1), 1)
-                        z[vars_indexes.index(ivar), inod[0], time] = unpack(
-                            endian + ftype, f.read(fsize)
-                        )[0]
+                        f.seek(fsize*(inod[1]-jnod[1]-1), 1)
+                        z[vars_indexes.index(ivar), inod[0], time] = \
+                            unpack(endian+ftype, f.read(fsize))[0]
                         jnod = inod
-                    f.seek(fsize * self.npoin3 - fsize * jnod[1], 1)
+                    f.seek(fsize*self.npoin3-fsize*jnod[1], 1)
                 else:
-                    f.seek(fsize * self.npoin3, 1)
+                    f.seek(fsize*self.npoin3, 1)
                 f.seek(4, 1)
         return z
 
@@ -545,12 +519,10 @@ class Selafin(object):
         @param reset (boolean) Force reset of tree
         """
         if reset or self.tree is None:
-            isoxy = np.column_stack(
-                (
-                    np.sum(self.meshx[self.ikle2], axis=1) / 3.0,
-                    np.sum(self.meshy[self.ikle2], axis=1) / 3.0,
-                )
-            )
+            isoxy = np.column_stack((np.sum(self.meshx[self.ikle2],
+                                            axis=1)/3.0,
+                                     np.sum(self.meshy[self.ikle2],
+                                            axis=1)/3.0))
             self.tree = cKDTree(isoxy)
 
     def set_mpl_tri(self, reset=False):
@@ -561,9 +533,8 @@ class Selafin(object):
         """
         if reset or self.neighbours is None or self.edges is None:
             # from matplotlib.tri import Triangulation
-            mpltri = Triangulation(
-                self.meshx, self.meshy, self.ikle2
-            ).get_cpp_triangulation()
+            mpltri = Triangulation(self.meshx, self.meshy, self.ikle2)\
+                        .get_cpp_triangulation()
             self.neighbours = mpltri.get_neighbors()
             self.edges = mpltri.get_edges()
 
@@ -571,8 +542,8 @@ class Selafin(object):
         """
         Deleting the object
         """
-        if self.file["name"] != "":
-            self.file["hook"].close()
+        if self.file['name'] != '':
+            self.file['hook'].close()
 
     # get methods start here
     def getPrecision(self):
@@ -620,37 +591,131 @@ class Selafin(object):
     def getIPOBO3(self):
         return self.ipob3
 
-    def getDATE(self):
-        return self.DATE
+    def getDate(self):
+        return self.datetime
 
     def getMesh(self):
-        return self.NELEM, self.NPOIN, self.NDP, self.IKLE, self.IPOBO, self.x, self.y
+        return (
+            self.nelem2,
+            self.nelem3,
+            self.npoin2,
+            self.npoin3,
+            self.ndp2,
+            self.ndp3,
+            self.nplan,
+            self.ikle2,
+            self.ikle3,
+            self.ipob2,
+            self.ipob3,
+            self.meshx,
+            self.meshy,
+        )
 
     # set methods start here
     def setTitle(self, title):
         self.title = title
 
-    def setDATE(self, DATE):
-        self.DATE = DATE
+    def setDate(self, DATE):
+        self.datetime = DATE
+
+    def setTimes(self, times):
+        self.tags["times"] = times
 
     def setVarNames(self, vnames):
-        self.NBV1 = len(vnames)
-        self.vnames = vnames
+        self.nbv1 = len(vnames)
+        self.varnames = vnames
 
     def setVarUnits(self, vunits):
-        self.vunits = vunits
+        self.varunits = vunits
 
     def setIPARAM(self, IPARAM):
         self.IPARAM = IPARAM
 
-    def setMesh(self, NELEM, NPOIN, NDP, IKLE, IPOBO, x, y):
-        self.NELEM = NELEM
-        self.NPOIN = NPOIN
-        self.NDP = NDP
-        self.IKLE = IKLE
-        self.IPOBO = IPOBO
-        self.x = x
-        self.y = y
+    def setFile(self, filename, endian=">", precision="double"):
+        self.fole = {}
+        self.fole.update({"hook": open(filename, "wb")})
+        self.fole.update({"name": filename})
+        if endian not in [">", "<"]:
+            raise ValueError("endian must be '>' or '<'")
+        if precision not in ["single", "double"]:
+            raise ValueError("precision must be'single' or 'double'")
+        self.fole.update({"endian": endian})  # big endian
+        if precision == "double":
+            self.fole.update({"float": ("d", 8)})  # double precision
+        else: 
+            self.fole.update({"float": ("f", 4)})  # single precision
 
-    def close(self):
-        self.f.close()
+    def setGeometry(self, ds):
+        """
+        Set the mesh
+
+        @param ds (Dataset) Dataset containing the mesh parameters
+        """
+        if 'plan' in ds.dims:
+            self.nplan = len(ds.plan)
+            if self.nplan == 1: self.nplan = 0
+        else : 
+            self.nplan = 0
+        if self.nplan > 1:
+            # Adding additional metadata as attributes
+            self.nelem2 = ds.attrs["nelem2"]
+            self.nelem3 = ds.attrs["nelem3"]
+            self.npoin2 = ds.attrs["npoin2"]
+            self.npoin3 = ds.attrs["npoin3"]
+            self.ipob2 = ds.attrs["ipob2"]
+            self.ipob3 = ds.attrs["ipob3"]
+            self.ndp2 = ds.attrs["ndp2"]
+            self.ndp3 = ds.attrs["ndp3"]
+            self.ikle2 = ds["ikle2"].data
+            self.ikle3 = ds["ikle3"].data
+            self.iparam = list(ds.attrs["iparam"])
+        else:
+            self.nelem2 = ds.attrs["nelem2"]
+            self.nelem3 = self.nelem2
+            self.npoin2 = ds.attrs["npoin2"]
+            self.npoin3 = self.npoin2
+            self.ipob2 = ds.attrs["ipob2"]
+            self.ipob3 = self.ipob2
+            self.ndp2 = ds.attrs["ndp2"]
+            self.ndp3 = self.ndp2
+            self.ikle2 = ds["ikle2"].data
+            self.ikle3 = self.ikle2
+            self.iparam = list(ds.attrs["iparam"])
+        # Mesh coordinates
+        self.meshx = ds.x
+        self.meshy = ds.y
+
+    def setVars(self, varnames, varunits):
+        # Meta data and variable names
+        self.setVarNames(varnames)
+        self.setVarUnits(varunits)
+        self.nbv1 = len(self.varnames)
+        self.nvar = self.nbv1
+        self.varindex = range(self.nvar)
+
+    def setMetaData(self, ds):
+        self.setGeometry(ds)
+        self.setVars(ds.varnames, ds.varunits)
+        self.setDate(ds.attrs["date"])
+        self.setTimes(ds.time.data)
+
+    def write(self, ds):
+        """
+        Write content of the object into a Serafin file
+
+        @param file_name (string) Name of the serafin file
+        """
+        nplan = max(1, self.nplan)
+        ftype, fsize = self.fole["float"]
+        dtype = np.float32 if fsize == 4 else np.float64
+        shape = (self.nbv1, self.npoin2, nplan) if nplan > 1 else (self.nbv1, self.npoin2)
+        self.append_header_slf()
+        for it, time in enumerate(self.tags["times"]):
+            self.append_core_time_slf(it)
+            temp = np.zeros(shape, dtype=dtype)
+            for iv, var in enumerate(self.varnames):
+                temp[iv, :] = ds.isel(time=it)[var.strip()].squeeze()
+            self.append_core_vars_slf(\
+                np.reshape(np.ravel(temp),\
+                           (self.nvar, self.npoin3)))
+        self.fole["hook"].close()

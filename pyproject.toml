@@ -8,6 +8,8 @@ authors = ["tomsail <saillour.thomas@gmail.com>"]
 python = ">=3.9"
 xarray = "*"
 numpy = "*"
+scipy = "*"
+dask = { version = "*", optional = true }
 
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"

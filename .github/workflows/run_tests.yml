@@ -1,0 +1,73 @@
+name: test
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "dev"
+    paths:
+      - "**.py"
+      - ".github/workflows/*test*.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "requirements/requirements*.txt"
+      - "requirements/requirements-dask.txt"
+  pull_request:
+    paths:
+      - "**.py"
+      - ".github/workflows/*test*.yml"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - "requirements/requirements*.txt"
+      - "requirements/requirements-dask.txt"
+
+jobs:
+  test:
+    name: "test Python ${{ matrix.python }} on ${{ matrix.os }} with Dask ${{ matrix.dask }}"
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python: ["3.10", "3.11"]
+        dask: [true, false]
+        include:
+          - os: "macos-latest"
+            python-version: "3.10"
+            dask: false
+    defaults:
+      run:
+        shell: "bash -eo pipefail {0}"
+
+    steps:
+      - uses: "actions/checkout@main"
+      - uses: "actions/setup-python@main"
+        with:
+          python-version: "${{ matrix.python }}"
+      - uses: "actions/cache@main"
+        id: "cache"
+        with:
+          path: "${{ env.pythonLocation }}"
+          key: "test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml', 'requirements/*') }}"
+      - run: "python --version"
+      - run: "python -mpip install -U pip"
+      - run: "python -mpip --version"
+      - run: "python -mpip install -r requirements/requirements.txt"
+      - name: "Install Dask requirements"
+        if: matrix.dask
+        run: "python -mpip install -r requirements/requirements-dask.txt"
+      - run: "python -mpip install ./"
+      - run: "python -mpip cache info"
+      - run: "python -mpip freeze"
+      - run: "pytest --version"
+        if: "(matrix.os == 'ubuntu-latest') && (matrix.python == '3.11' )"
+      - name: Clear Python cache
+        run: find . -name '__pycache__' -exec rm -rf {} +
+        run: find . -name '*.pyc' -exec rm -rf {} +
+      - name: "Run tests with Dask"
+        if: matrix.dask
+        run: "pytest"
+      - name: "Run tests without Dask"
+        if: "!matrix.dask"
+        run: "pytest"
