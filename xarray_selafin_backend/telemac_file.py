@@ -2114,6 +2114,14 @@ class TelemacFile(HermesFile if HERMES_AVAIL else SerafinFile):
         return values
 
     def get_iparam(self):
+        # calling properties
+        self.nptfr
+        self.nptir
+        self.knolg
+        self.typ_elem
+        self.x_orig
+        self.y_orig
+        # 
         iparam = [0]*10
         iparam[2] = self._x_orig
         iparam[3] = self._y_orig
@@ -2125,9 +2133,7 @@ class TelemacFile(HermesFile if HERMES_AVAIL else SerafinFile):
         self.iparam = iparam
 
     def set_values(self, ds):
-        print(self.npoin3)
         self._values = np.zeros((self.ntimestep,self.nvar, ds.attrs["npoin3"]))
-        print(self._values.shape)
         for it, t_ in enumerate(self.times):
             for iv, var in enumerate(ds.data_vars.keys()):
                 self._values[it, iv] = ds[var].isel(time=it).data.ravel()
