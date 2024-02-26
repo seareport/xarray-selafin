@@ -63,8 +63,7 @@ jobs:
       - run: "pytest --version"
         if: "(matrix.os == 'ubuntu-latest') && (matrix.python == '3.11' )"
       - name: Clear Python cache
-        run: find . -name '__pycache__' -exec rm -rf {} +
-        run: find . -name '*.pyc' -exec rm -rf {} +
+        run: find . -name '__pycache__' -o -name '*.pyc' | xargs --no-run-if-empty rm -rf
       - name: "Run tests with Dask"
         if: matrix.dask
         run: "pytest"
