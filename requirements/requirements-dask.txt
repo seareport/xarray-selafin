@@ -32,5 +32,5 @@ toolz==0.12.1
 tzdata==2024.1
 userpath==1.9.1
 xarray==2024.2.0
--e git+https://github.com/seareport/xarray-selafin.git@473c1bb40a6849921df313255c2eef405589f590#egg=xarray_selafin_backend
+-e git+https://github.com/seareport/xarray-selafin.git@hermes#egg=xarray_selafin_backend
 zipp==3.17.0
