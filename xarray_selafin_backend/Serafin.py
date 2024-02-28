@@ -300,11 +300,11 @@ class SerafinHeader:
     def _compute_mesh_coordinates(self):
         """Compute mesh coordinates from origin"""
         # if settings.ENABLE_MESH_ORIGIN:
-        #     self.x = self.mesh_origin[0] + self.x_stored
-        #     self.y = self.mesh_origin[1] + self.y_stored
+        self.x = self.mesh_origin[0] + self.x_stored
+        self.y = self.mesh_origin[1] + self.y_stored
         # else:
-        self.x = self.x_stored
-        self.y = self.y_stored
+        # self.x = self.x_stored
+        # self.y = self.y_stored
 
     def _set_header_size(self):
         """Set header size"""
@@ -487,6 +487,15 @@ class SerafinHeader:
         self.float_type = "f"
         self.float_size = 4
         self.np_float_type = np.float32
+        self._set_frame_size()
+        self._set_header_size()
+        self.file_size = self._expected_file_size()
+
+    def to_double_precision(self):
+        self.file_format = bytes("SERAFIND", SLF_EIT).ljust(8)
+        self.float_type = "d"
+        self.float_size = 8
+        self.np_float_type = np.float64
         self._set_frame_size()
         self._set_header_size()
         self.file_size = self._expected_file_size()
@@ -1226,22 +1235,22 @@ class Write(Serafin):
         # IKLE
         nb_ikle_values = header.nb_elements * header.nb_nodes_per_elem
         self.file.write(header.pack_int(4 * nb_ikle_values))
-        self.file.write(header.pack_int(*header.ikle, nb=nb_ikle_values))
+        self.file.write(np.array(header.ikle, dtype=np.dtype(np.int32).newbyteorder(header.endian)))
         self.file.write(header.pack_int(4 * nb_ikle_values))
 
         # IPOBO
         self.file.write(header.pack_int(4 * header.nb_nodes))
-        self.file.write(header.pack_int(*header.ipobo, nb=header.nb_nodes))
+        self.file.write(np.array(header.ipobo, dtype=np.dtype(np.int32).newbyteorder(header.endian)))
         self.file.write(header.pack_int(4 * header.nb_nodes))
 
         # X coordinates
         self.file.write(header.pack_int(header.float_size * header.nb_nodes))
-        self.file.write(header.pack_float(*header.x_stored, nb=header.nb_nodes))
+        self.file.write(np.array(header.x_stored, dtype=header.np_type))
         self.file.write(header.pack_int(header.float_size * header.nb_nodes))
 
         # Y coordinates
         self.file.write(header.pack_int(header.float_size * header.nb_nodes))
-        self.file.write(header.pack_float(*header.y_stored, nb=header.nb_nodes))
+        self.file.write(np.array(header.y_stored, dtype=header.np_type))
         self.file.write(header.pack_int(header.float_size * header.nb_nodes))
 
     def write_entire_frame(self, header, time_to_write, values):
@@ -1262,5 +1271,5 @@ class Write(Serafin):
 
         for i in range(header.nb_var):
             self.file.write(header.pack_int(header.float_size * header.nb_nodes))
-            self.file.write(header.pack_float(*values[i, :], nb=header.nb_nodes))
+            self.file.write(np.array(values[i, :], dtype=header.np_type))
             self.file.write(header.pack_int(header.float_size * header.nb_nodes))

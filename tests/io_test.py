@@ -41,7 +41,7 @@ def test_to_selafin(tmp_path, slf_in):
     ds_slf = xr.open_dataset(slf_in, engine="selafin")
     slf_out = tmp_path / "test.slf"
     ds_slf.selafin.write(slf_out)
-    ds_slf2 = xr.open_dataset(slf_out)
+    ds_slf2 = xr.open_dataset(slf_out, engine="selafin")
     assert ds_slf2.equals(ds_slf)
 
 
