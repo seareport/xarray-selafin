@@ -24,14 +24,18 @@ def read_serafin(f):
     return resin
 
 
-def write_serafin(fout, ds):
-    slf_header = Serafin.SerafinHeader("Converted from Xarray")
-    slf_header.date = ds.attrs["date"]
-    slf_header.float_type = "d"
-    slf_header.float_size = 8
-    slf_header.np_float_type = np.float64
+def write_serafin(fout, ds, file_format):
+    slf_header = Serafin.SerafinHeader(ds.attrs["title"])  # Avoid changing title to perform comparison
+    if file_format == 'SERAFIN':
+        slf_header.to_single_precision()
+    elif file_format == 'SERAFIND':
+        slf_header.to_double_precision()
+    else:
+        raise NotImplementedError
+
     slf_header.endian = ">"
 
+    slf_header.date = ds.attrs["date"]
     slf_header.nb_var = len(ds.varnames)
     if "plan" in ds.dims:
         slf_header.nb_planes = len(ds.plan)
@@ -50,7 +54,7 @@ def write_serafin(fout, ds):
     slf_header.var_names = [s.ljust(16).encode("utf-8") for s in ds.varnames]
     slf_header.var_units = ds.varunits
 
-    slf_header.params = list(ds.attrs["iparam"])
+    slf_header.params = tuple(ds.attrs["iparam"])
     slf_header.nb_elements = ds.attrs["nelem3"]
     slf_header.nb_nodes = ds.attrs["npoin3"]
     slf_header.nb_nodes_per_elem = ds.attrs["ndp3"]
@@ -64,7 +68,7 @@ def write_serafin(fout, ds):
     slf_header.ikle = ds["ikle3"].data.ravel()
     slf_header.ikle_2d = ds["ikle2"].data
     slf_header.ipobo = ds.attrs["ipob3"]
-    vars = [bs.decode("utf-8") for bs in slf_header.var_names]
+    vars = [bs.decode(Serafin.SLF_EIT) for bs in slf_header.var_names]
 
     resout = Serafin.Write(fout, "en", overwrite=True)
     resout.__enter__()
@@ -194,7 +198,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ipob3 = slf.header.ipobo
         x = slf.header.x
         y = slf.header.y
-        vars = [bs.decode("utf-8").strip() for bs in slf.header.var_names]
+        vars = [bs.decode(Serafin.SLF_EIT).strip() for bs in slf.header.var_names]
 
         # Create data variables using Dask arrays for the variables
         data_vars = {}
@@ -229,6 +233,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
 
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
 
+        ds.attrs["title"] = slf.header.title.decode(Serafin.SLF_EIT).strip()
         ds.attrs["meshx"] = x
         ds.attrs["meshy"] = y
         ds.attrs["nelem2"] = nelem2
@@ -269,7 +274,7 @@ class SelafinAccessor:
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
 
-    def write(self, filepath, **kwargs):
+    def write(self, filepath, file_format='SERAFIND', **kwargs):
         """
         Write data from an Xarray dataset to a SELAFIN file.
         Parameters:
@@ -280,4 +285,4 @@ class SelafinAccessor:
 
         # Simplified example of writing logic (details need to be implemented):
 
-        write_serafin(filepath, ds)
+        write_serafin(filepath, ds, file_format)
