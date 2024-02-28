@@ -1,0 +1,91 @@
+ci:
+  autofix_prs: false
+default_language_version:
+  python: "python3"
+fail_fast: false
+
+repos:
+  - repo: "https://github.com/pre-commit/pre-commit-hooks"
+    rev: "v4.5.0"
+    hooks:
+      - id: "check-added-large-files"
+        args: ["--maxkb=40000"]
+      - id: "check-ast"
+      - id: "check-byte-order-marker"
+      - id: "check-docstring-first"
+      - id: "check-executables-have-shebangs"
+      - id: "check-json"
+      - id: "check-symlinks"
+      - id: "check-merge-conflict"
+      - id: "check-vcs-permalinks"
+      - id: "check-xml"
+      - id: "check-yaml"
+      - id: "debug-statements"
+      - id: "end-of-file-fixer"
+        exclude: ".+\\.ipynb"
+      - id: "name-tests-test"
+      - id: "trailing-whitespace"
+
+  - repo: "https://github.com/pre-commit/pygrep-hooks"
+    rev: "v1.10.0"
+    hooks:
+      - id: "python-check-blanket-noqa"
+      - id: "python-check-blanket-type-ignore"
+      - id: "python-use-type-annotations"
+
+  - repo: "https://github.com/asottile/reorder_python_imports"
+    rev: "v3.12.0"
+    hooks:
+      - id: "reorder-python-imports"
+        args:
+          - "--py38-plus"
+
+  - repo: "https://github.com/psf/black"
+    rev: "23.11.0"
+    hooks:
+      - id: "black"
+
+  - repo: "https://github.com/astral-sh/ruff-pre-commit"
+    # Ruff version.
+    rev: "v0.1.7"
+    hooks:
+      - id: "ruff"
+
+  - repo: "https://github.com/kynan/nbstripout"
+    rev: "0.6.1"
+    hooks:
+      - id: "nbstripout"
+
+  - repo: "https://github.com/python-poetry/poetry"
+    rev: "1.7.0"
+    hooks:
+      - id: "poetry-check"
+        name: "poetry check"
+      - id: "poetry-check"
+        name: "poetry check --lock"
+        args: ["--lock"]
+      - id: "poetry-lock"
+        name: "poetry lock --no-update"
+        args: ["--no-update"]
+      - id: "poetry-export"
+        name: "poetry export main"
+        args:
+          [
+            "--only",
+            "main",
+            "-f",
+            "requirements.txt",
+            "-o",
+            "requirements/requirements.txt",
+          ]
+      - id: "poetry-export"
+        name: "poetry export dask"
+        args:
+          [
+            "--with",
+            "dask",
+            "-f",
+            "requirements.txt",
+            "-o",
+            "requirements/requirements-dask.txt",
+          ]

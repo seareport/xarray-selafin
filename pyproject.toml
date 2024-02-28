@@ -11,7 +11,10 @@ pytest = "*"
 scipy = "*"
 shapely = "*"
 xarray = "*"
-dask = { version = "*", optional = true }
+netcdf4 = "*"
+
+[tool.poetry.group.dask.dependencies]
+dask = "*"
 
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
