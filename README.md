@@ -13,10 +13,10 @@ poetry install
 
 ```python
 import xarray as xr
-ds = xr.open_dataset(file_3d, engine='selafin')
+ds = xr.open_dataset("input_file.slf", engine='selafin')
 ```
 ## Write selafin
 
 ```python
-ds.selafin.write('test.nc')
+ds.selafin.write('output_file.slf')
 ```

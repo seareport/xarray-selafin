@@ -47,17 +47,31 @@ def test_to_selafin(tmp_path, slf_in):
 
 @TIDAL_FLATS
 def test_slice(tmp_path, slf_in):
-    # simple slice
+    # simple selection
     ds_slf = xr.open_dataset(slf_in, engine="selafin")
-    nc_out = tmp_path / "test.nc"
+    nc_out = tmp_path / "test1.nc"
+    ds_slice = ds_slf.isel(time=0)
+    ds_slice.to_netcdf(nc_out)
+    ds_nc = xr.open_dataset(nc_out)
+    assert ds_nc.equals(ds_slice)
+    # simple range
+    ds_slf = xr.open_dataset(slf_in, engine="selafin")
+    nc_out = tmp_path / "test2.nc"
     ds_slice = ds_slf.isel(time=slice(0, 10))
     ds_slice.to_netcdf(nc_out)
     ds_nc = xr.open_dataset(nc_out)
     assert ds_nc.equals(ds_slice)
-    # multiple slice
+    # multiple slices
     ds_slf = xr.open_dataset(slf_in, engine="selafin")
-    nc_out = tmp_path / "test2.nc"
+    nc_out = tmp_path / "test3.nc"
     ds_slice = ds_slf.isel(time=slice(0, 10), plan=0)
     ds_slice.to_netcdf(nc_out)
     ds_nc = xr.open_dataset(nc_out)
     assert ds_nc.equals(ds_slice)
+    # # multiple range slices  # FIXME: not working yet
+    # ds_slf = xr.open_dataset(slf_in, engine="selafin")
+    # nc_out = tmp_path / "test3.nc"
+    # ds_slice = ds_slf.isel(time=slice(0, 10), plan=slice(5, 10))
+    # ds_slice.to_netcdf(nc_out)
+    # ds_nc = xr.open_dataset(nc_out)
+    # assert ds_nc.equals(ds_slice)
