@@ -8,7 +8,7 @@ from xarray.backends import BackendArray
 from xarray.backends import BackendEntrypoint
 from xarray.core import indexing
 
-from xarray_selafin_backend import Serafin
+from . import Serafin
 
 
 def compute_duration_between_datetime(t0, time_serie):

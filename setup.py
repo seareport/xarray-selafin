@@ -1,15 +1,15 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from setuptools import setup
 
 setup(
-    name="xarray-selafin-backend",
-    version="0.1.3-beta1",
+    name="xarray-selafin",
+    version="0.1.1",
     author=["tomsail", "lucduron"],
     author_email="l.duron@cnr.tm.fr",
     description="https://github.com/seareport/xarray-selafin",
     packages=find_packages(),
     package_data={
-        # If your data files are in a package called 'xarray_selafin_backend' under 'data'
-        "xarray_selafin_backend": ["data/*", "variable/*"],
+        "xarray_selafin": ["data/*", "variable/*"],
     },
     install_requires=[
         "numpy",
@@ -21,11 +21,13 @@ setup(
     ],
     extras_require={
         "dask": ["dask"],
-        "dev": ["matplotlib"],  # Assuming netcdf4 is listed intentionally in both main and dev dependencies
+        "dev": [
+            "matplotlib"
+        ],  # Assuming netcdf4 is listed intentionally in both main and dev dependencies
     },
     entry_points={
         "xarray.backends": [
-            "selafin = xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint",
+            "selafin = xarray_selafin.xarray_backend:SelafinBackendEntrypoint",
         ],
     },
     python_requires=">=3.9",
