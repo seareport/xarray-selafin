@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python: ["3.10", "3.11"]
+        python: ["3.9", "3.10", "3.11"]
         dask: [true, false]
         include:
           - os: "macos-latest"
@@ -62,8 +62,6 @@ jobs:
       - run: "python -mpip freeze"
       - run: "pytest --version"
         if: "(matrix.os == 'ubuntu-latest') && (matrix.python == '3.11' )"
-      - name: Clear Python cache
-        run: find . -name '__pycache__' -o -name '*.pyc' | xargs --no-run-if-empty rm -rf
       - name: "Run tests with Dask"
         if: matrix.dask
         run: "pytest tests/"
