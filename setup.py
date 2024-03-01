@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="xarray-selafin-backend",
-    version="0.1.0",
-    author="tomsail",
-    author_email="saillour.thomas@gmail.com",
+    version="0.1.3-beta1",
+    author=["tomsail", "lucduron"],
+    author_email="l.duron@cnr.tm.fr",
     description="https://github.com/seareport/xarray-selafin",
     packages=find_packages(),
     package_data={
