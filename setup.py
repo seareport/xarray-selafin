@@ -7,6 +7,10 @@ setup(
     author_email="saillour.thomas@gmail.com",
     description="https://github.com/seareport/xarray-selafin",
     packages=find_packages(),
+    package_data={
+        # If your data files are in a package called 'xarray_selafin_backend' under 'data'
+        "xarray_selafin_backend": ["data/*", "variable/*"],
+    },
     install_requires=[
         "numpy",
         "pytest",
