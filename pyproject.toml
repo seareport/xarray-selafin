@@ -1,8 +1,14 @@
 [tool.poetry]
-name = "xarray-selafin-backend"
-version = "0.1.0"
+name = "xarray-selafin"
+version = "0.1.2"
 description = ""
-authors = ["tomsail <saillour.thomas@gmail.com>"]
+authors = ["tomsail <saillour.thomas@gmail.com>", "lucduron <l.duron@cnr.tm.fr>"]
+readme = "README.md"
+repository = "https://github.com/seareport/xarray-selafin/"
+include = [
+    "xarray_selafin/data/*",
+    "xarray_selafin/variable/*"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.9"
@@ -17,7 +23,7 @@ netcdf4 = "*"
 dask = "*"
 
 [tool.poetry.plugins."xarray.backends"]
-selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
+selafin = "xarray_selafin.xarray_backend:SelafinBackendEntrypoint"
 
 [tool.poetry.group.dev.dependencies]
 matplotlib = "*"
