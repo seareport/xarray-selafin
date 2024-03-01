@@ -1,4 +1,6 @@
 """!
+Adapted from https://github.com/CNR-Engineering/PyTelTools
+
 Read/Write Serafin files and manipulate associated data.
 
 Handles Serafin file with:
@@ -217,6 +219,32 @@ class SerafinHeader:
 
     def _set_has_knolg(self):
         self.has_knolg = self.params[7] != 0 or self.params[8] != 0
+
+    def compute_ikle(self, nb_planes, nb_nodes_per_elem):
+        ikle_bottom_pattern = np.concatenate(
+            (self.ikle_2d, self.ikle_2d + self.nb_nodes_2d), axis=1
+        )
+        ikle = np.empty(
+            (nb_planes - 1, self.nb_elements // (nb_planes - 1), nb_nodes_per_elem),
+            dtype=np.int64,
+        )
+        for i in range(nb_planes - 1):
+            ikle[i] = ikle_bottom_pattern + i * self.nb_nodes_2d
+        return ikle.flatten()
+
+    def build_params(self):
+        self.params = (
+            1,
+            0,
+            self.mesh_origin[0],
+            self.mesh_origin[0],
+            0,
+            0,
+            self.nb_planes,
+            self.nb_elements,
+            0,
+            1
+        )
 
     def _build_ikle_2d(self):
         if self.is_2d:
@@ -549,7 +577,7 @@ class SerafinHeader:
 
     def set_mesh_origin(self, x, y):
         """!
-        @brief: Set mesh origin coordinates (/!\ coordinates should be integers!)
+        @brief: Set mesh origin coordinates (Beware: coordinates should be integers!)
         @param x <int>: X-coordinate of the origin
         @param y <int>: Y-coordinate of the origin
         """
