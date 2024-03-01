@@ -303,8 +303,6 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
             b.decode(Serafin.SLF_EIT).rstrip() for b in slf.header.var_units
         ]
         ds.attrs["date_start"] = slf.header.date
-        if not is_2d:
-            ds.attrs["nplan"] = slf.header.nb_planes
 
         return ds
 
