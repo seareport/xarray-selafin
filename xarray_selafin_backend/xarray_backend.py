@@ -32,7 +32,7 @@ def write_serafin(fout, ds, file_format):
 
     slf_header.endian = ">"
 
-    slf_header.date = ds.attrs["date"]
+    slf_header.date = ds.attrs["date_start"]
 
     slf_header.nb_frames = ds.time.size
 
@@ -245,7 +245,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ds.attrs["varunits"] = [
             b.decode(Serafin.SLF_EIT).rstrip() for b in slf.header.var_units
         ]
-        ds.attrs["date"] = slf.header.date
+        ds.attrs["date_start"] = slf.header.date
         ds.attrs["nplan"] = slf.header.nb_planes
         if nplan > 1:
             # Adding additional metadata as attributes
