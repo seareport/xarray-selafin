@@ -5,8 +5,7 @@
 to have the backend working in xarray, follow these steps
 
 ```
-git clone this repository
-poetry install 
+pip install xarray-selafin
 ```
 
 ## Read selafin
