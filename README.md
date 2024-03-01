@@ -27,32 +27,28 @@ ds.selafin.write("output_file.slf")
 * time
 * node
 * plan (only in 3D)
-* elem2
-* ndp2
-* elem3 (only in 3D)
-* ndp3 (only in 3D)
  
 ### Coordinates
 
-| Coordinate | Description                                     |
-|------------|-------------------------------------------------|
-| x          | East coordinates                                |
-| y          | North coordinates                               |
-| time       | Datetime serie                                  |
-| ikle2      | Connectivity table in 2D                        |
-| ikle3      | Connectivity table in 3D (only in 3D, optional) |
+| Coordinate | Description            |
+|------------|------------------------|
+| x          | East mesh coordinates  |
+| y          | North mesh coordinates |
+| time       | Datetime serie         |
 
 ### Attributes
 
-All attributes are optional:
+All attributes are optional except `ikle2`:
 
-| Attribute  | Description                                    | Default value             | 
-|------------|------------------------------------------------|---------------------------|
-| title      | Serafin title                                  | (empty)                   |
-| float_size | Float size                                     | 4 (single precision)      |
-| endian     | File endianness                                | ">"                       |
-| params     | Table of integer parameters                    | (can be rebuilt)          |
-| var_IDs    | List of variable identifiers                   |                           |
-| varnames   | List of variable names (same order of var_IDs) | (use variable identifier) |
-| varunits   | List of variable units (same order of var_IDs) | ?                         |
-| date_start | Starting date with integers                    | (from first time serie)   |
+| Attribute  | Description                                      | Default value             | 
+|------------|--------------------------------------------------|---------------------------|
+| title      | Serafin title                                    | (empty)                   |
+| float_size | Float size                                       | 4 (single precision)      |
+| endian     | File endianness                                  | ">"                       |
+| params     | Table of integer parameters                      | (can be rebuilt)          |
+| ikle2      | Connectivity table in 2D                         | -                         |
+| ikle3      | Connectivity table in 3D (only in 3D, optional)  | (can be rebuilt from 2D)  |
+| var_IDs    | List of variable identifiers                     | -                         |
+| varnames   | List of variable names (same order of var_IDs)   | (use variable identifier) |
+| varunits   | List of variable units (same order of var_IDs)   | ?                         |
+| date_start | Starting date with integers                      | (from first time serie)   |

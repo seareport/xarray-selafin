@@ -68,12 +68,12 @@ def write_serafin(fout, ds):
         is_2d = False
         nplan = len(ds.plan)
         slf_header.nb_nodes_per_elem = 6
-        slf_header.nb_elements = ds.sizes["elem2"] * (nplan - 1)
+        slf_header.nb_elements = len(ds.attrs["ikle2"]) * (nplan - 1)
     else:  # 2D
         is_2d = True
         nplan = 1  # just to do a multiplication
         slf_header.nb_nodes_per_elem = 3
-        slf_header.nb_elements = ds.sizes["elem2"]
+        slf_header.nb_elements = len(ds.attrs["ikle2"])
 
     slf_header.nb_nodes = ds.sizes["node"] * nplan
     slf_header.nb_nodes_2d = ds.sizes["node"]
@@ -88,17 +88,21 @@ def write_serafin(fout, ds):
     slf_header.mesh_origin = (0, 0)  # Should be integers
     slf_header.x_stored = x - slf_header.mesh_origin[0]
     slf_header.y_stored = y - slf_header.mesh_origin[1]
-    slf_header.ikle_2d = ds["ikle2"].values
+    slf_header.ikle_2d = ds.attrs["ikle2"]
     if is_2d:
         slf_header.ikle = slf_header.ikle_2d.flatten()
     else:
         try:
-            slf_header.ikle = ds.attrs["ikle3"].values
+            slf_header.ikle = ds.attrs["ikle3"]
         except KeyError:
             # Rebuild IKLE from 2D
             slf_header.ikle = slf_header.compute_ikle(len(ds.plan), slf_header.nb_nodes_per_elem)
 
-    slf_header.ipobo = ds.attrs["ipobo"]
+    try:
+        slf_header.ipobo = ds.attrs["ipobo"]
+    except KeyError:
+        # Rebuild IPOBO
+        slf_header.build_ipobo()
 
     if "plan" in ds.dims:  # 3D
         slf_header.nb_planes = len(ds.plan)
@@ -238,15 +242,9 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
 
         # Prepare dimensions, coordinates, and data variables
         times = [datetime(*slf.header.date) + timedelta(seconds=t) for t in slf.time]
-        nelem2 = len(slf.header.ikle_2d)
-        nelem3 = slf.header.nb_elements
         npoin2 = slf.header.nb_nodes_2d
-        npoin3 = slf.header.nb_nodes
-        ndp2 = 3
         ndp3 = slf.header.nb_nodes_per_elem
         nplan = slf.header.nb_planes
-        ikle2 = slf.header.ikle_2d
-        ipobo = slf.header.ipobo
         x = slf.header.x
         y = slf.header.y
         vars = slf.header.var_IDs
@@ -281,12 +279,8 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
             "x": ("node", x[:npoin2]),
             "y": ("node", y[:npoin2]),
             "time": times,
-            # Consider how to include IPOBO if it's essential for your analysis
-            # Adding IKLE as a coordinate or data variable for mesh connectivity
-            "ikle2": (("elem2", "ndp2"), ikle2),
+            # Consider how to include IPOBO (with node and plan dimensions?) if it's essential for your analysis
         }
-        if not is_2d:
-            coords["ikle3"] = (("elem3", "ndp3"), np.reshape(slf.header.ikle, (nelem3, ndp3)))
 
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
 
@@ -294,7 +288,10 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ds.attrs["float_size"] = slf.header.float_size
         ds.attrs["endian"] = slf.header.endian
         ds.attrs["params"] = slf.header.params
-        ds.attrs["ipobo"] = ipobo
+        ds.attrs["ipobo"] = slf.header.ipobo
+        ds.attrs["ikle2"] = slf.header.ikle_2d
+        if not is_2d:
+            ds.attrs["ikle3"] = np.reshape(slf.header.ikle, (slf.header.nb_elements, ndp3))
         ds.attrs["var_IDs"] = vars
         ds.attrs["varnames"] = [
             b.decode(Serafin.SLF_EIT).rstrip() for b in slf.header.var_names
