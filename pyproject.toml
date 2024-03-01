@@ -19,10 +19,8 @@ dask = "*"
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin_backend.xarray_backend:SelafinBackendEntrypoint"
 
-
 [tool.poetry.group.dev.dependencies]
 matplotlib = "*"
-netcdf4 = "*"
 
 [build-system]
 requires = ["poetry-core"]
