@@ -11,6 +11,10 @@ from xarray.core import indexing
 from xarray_selafin_backend import Serafin
 
 
+def compute_duration_between_datetime(t0, time_serie):
+    return (time_serie - t0).astype("timedelta64[s]").astype(float)
+
+
 def read_serafin(f):
     resin = Serafin.Read(f, "en")
     resin.__enter__()
@@ -78,12 +82,9 @@ def write_serafin(fout, ds, file_format):
 
     t0 = np.datetime64(datetime(*slf_header.date))
 
-    if slf_header.nb_frames == 1:
-        time_serie = [float(0.0)]
-    else:
-        time_serie = [
-            (t.values - t0).astype("timedelta64[s]").astype(int) for t in ds.time
-        ]
+    time_serie = compute_duration_between_datetime(t0, ds.time.values)
+    if isinstance(time_serie, float):
+        time_serie = [time_serie]
     for it, t_ in enumerate(time_serie):
         temp = np.empty(shape, dtype=slf_header.np_float_type)
         for iv, var in enumerate(vars):
