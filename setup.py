@@ -5,7 +5,7 @@ setup(
     version="0.1.0",
     author="tomsail",
     author_email="saillour.thomas@gmail.com",
-    description="",
+    description="https://github.com/seareport/xarray-selafin",
     packages=find_packages(),
     install_requires=[
         "numpy",
