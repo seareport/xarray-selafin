@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="xarray-selafin",
-    version="0.1.2",
+    version="0.1.3",
     author=["tomsail", "lucduron"],
     author_email="l.duron@cnr.tm.fr",
     description="https://github.com/seareport/xarray-selafin",
