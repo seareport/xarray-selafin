@@ -214,7 +214,7 @@ class SerafinHeader:
         if file_format in ("SERAFIND", "       D"):
             self._set_as_double_precision()
         else:
-            if file_format not in ("SERAFIN ", "SERAFINS", "SERAPHIN"):
+            if file_format not in ("        ", "SERAFIN ", "SERAFINS", "SERAPHIN"):
                 logger.warning(
                     'Format "%s" is unknown and is forced to "SERAFIN "' % file_format
                 )
