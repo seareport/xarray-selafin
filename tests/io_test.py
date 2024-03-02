@@ -62,6 +62,10 @@ def test_to_netcdf(tmp_path, slf_in):
 @TIDAL_FLATS
 def test_to_selafin(tmp_path, slf_in):
     ds_slf = xr.open_dataset(slf_in, engine="selafin")
+
+    # Remove some data which is rebuilt
+    del ds_slf.attrs["date_start"]
+
     slf_out = tmp_path / "test.slf"
     ds_slf.selafin.write(slf_out)
     ds_slf2 = xr.open_dataset(slf_out, engine="selafin")
@@ -75,6 +79,10 @@ def test_to_selafin(tmp_path, slf_in):
 @TIDAL_FLATS
 def test_to_selafin_eager_mode(tmp_path, slf_in):
     ds_slf = xr.open_dataset(slf_in, lazy_loading=False, engine="selafin")
+
+    # Remove some data which is rebuilt
+    del ds_slf.attrs["date_start"]
+
     slf_out = tmp_path / "test.slf"
     ds_slf.selafin.write(slf_out)
     ds_slf2 = xr.open_dataset(slf_out, engine="selafin")

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from datetime import timedelta
+from operator import attrgetter
 
 import numpy as np
 import xarray as xr
@@ -50,11 +51,25 @@ def write_serafin(fout, ds):
         pass  # Default: ">"
 
     try:
+        slf_header.nb_frames = ds.time.size
+    except AttributeError:
+        slf_header.nb_frames = 0
+
+    try:
         slf_header.date = ds.attrs["date_start"]
     except KeyError:
-        raise RuntimeError
-
-    slf_header.nb_frames = ds.time.size
+        # Retrieve starting date from first time
+        if slf_header.nb_frames == 0:
+            first_time = ds.time
+        else:
+            first_time = ds.time[0]
+        first_date_str = first_time.values.astype(str)  # "1900-01-01T00:00:00.000000000"
+        first_date_str = first_date_str.rstrip("0") + "0"  # "1900-01-01T00:00:00.0"
+        try:
+            date = datetime.strptime(first_date_str, '%Y-%m-%dT%H:%M:%S.%f')
+            slf_header.date = attrgetter("year", "month", "day", "hour", "minute", "second")(date)
+        except ValueError:
+            slf_header.date = (1900, 1, 1, 0, 0, 0)
 
     # Variables
     for var in ds.data_vars:
@@ -130,7 +145,10 @@ def write_serafin(fout, ds):
 
     t0 = np.datetime64(datetime(*slf_header.date))
 
-    time_serie = compute_duration_between_datetime(t0, ds.time.values)
+    try:
+        time_serie = compute_duration_between_datetime(t0, ds.time.values)
+    except AttributeError:
+        return  # no time (header only is written)
     if isinstance(time_serie, float):
         time_serie = [time_serie]
     for it, t_ in enumerate(time_serie):
