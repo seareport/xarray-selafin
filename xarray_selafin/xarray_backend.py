@@ -12,6 +12,9 @@ from xarray.core import indexing
 from xarray_selafin import Serafin
 
 
+DEFAULT_DATE_START = (1900, 1, 1, 0, 0, 0)
+
+
 def compute_duration_between_datetime(t0, time_serie):
     return (time_serie - t0).astype("timedelta64[s]").astype(float)
 
@@ -69,7 +72,7 @@ def write_serafin(fout, ds):
             date = datetime.strptime(first_date_str, '%Y-%m-%dT%H:%M:%S.%f')
             slf_header.date = attrgetter("year", "month", "day", "hour", "minute", "second")(date)
         except ValueError:
-            slf_header.date = (1900, 1, 1, 0, 0, 0)
+            slf_header.date = DEFAULT_DATE_START
 
     # Variables
     try:
@@ -269,6 +272,8 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         is_2d = slf.header.is_2d
 
         # Prepare dimensions, coordinates, and data variables
+        if slf.header.date is None:
+            slf.header.date = DEFAULT_DATE_START
         times = [datetime(*slf.header.date) + timedelta(seconds=t) for t in slf.time]
         npoin2 = slf.header.nb_nodes_2d
         ndp3 = slf.header.nb_nodes_per_elem
