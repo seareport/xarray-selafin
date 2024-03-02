@@ -16,8 +16,8 @@ def compute_duration_between_datetime(t0, time_serie):
     return (time_serie - t0).astype("timedelta64[s]").astype(float)
 
 
-def read_serafin(f):
-    resin = Serafin.Read(f, "en")
+def read_serafin(f, lang):
+    resin = Serafin.Read(f, lang)
     resin.__enter__()
     resin.read_header()
     resin.get_time()
@@ -72,6 +72,10 @@ def write_serafin(fout, ds):
             slf_header.date = (1900, 1, 1, 0, 0, 0)
 
     # Variables
+    try:
+        slf_header.language = ds.attrs["language"]
+    except KeyError:
+        slf_header.language = Serafin.LANG
     for var in ds.data_vars:
         try:
             name, unit = ds.attrs["variables"][var]
@@ -139,7 +143,7 @@ def write_serafin(fout, ds):
     except KeyError:
         slf_header.build_params()
 
-    resout = Serafin.Write(fout, "en", overwrite=True)
+    resout = Serafin.Write(fout, slf_header.language, overwrite=True)
     resout.__enter__()
     resout.write_header(slf_header)
 
@@ -256,10 +260,12 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         *,
         drop_variables=None,
         decode_times=True,
+        # Below are custom arguments
         lazy_loading=True,
+        lang=Serafin.LANG,
     ):
         # Initialize SELAFIN reader
-        slf = read_serafin(filename_or_obj)
+        slf = read_serafin(filename_or_obj, lang)
         is_2d = slf.header.is_2d
 
         # Prepare dimensions, coordinates, and data variables
@@ -307,6 +313,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
 
         ds.attrs["title"] = slf.header.title.decode(Serafin.SLF_EIT).strip()
+        ds.attrs["language"] = slf.header.language
         ds.attrs["float_size"] = slf.header.float_size
         ds.attrs["endian"] = slf.header.endian
         ds.attrs["params"] = slf.header.params

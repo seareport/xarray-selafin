@@ -24,6 +24,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+# Default language for variables
+LANG = "en"
+
 # Encoding Information Type (EIT) for Serafin title, variable names and units
 SLF_EIT = "iso-8859-1"
 
@@ -129,7 +133,7 @@ class SerafinHeader:
         [shape = nb_nodes]
     """
 
-    def __init__(self, title="", format_type="SERAFIN ", lang="en", endian=">"):
+    def __init__(self, title="", format_type="SERAFIN ", lang=LANG, endian=">"):
         """
         @param title <str>: title of the simulation
         @param format_type <str>:
