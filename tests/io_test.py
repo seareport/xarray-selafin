@@ -1,6 +1,8 @@
+import numpy as np
+import pandas as pd
 import pytest
 import xarray as xr
-
+from scipy.spatial import Delaunay
 
 TIDAL_FLATS = pytest.mark.parametrize(
     "slf_in",
@@ -29,10 +31,10 @@ def test_open_dataset(slf_in):
     assert isinstance(ds, xr.Dataset)
 
     # Dimensions
-    assert ds.sizes['time'] == 17
-    assert ds.sizes['node'] == 648
+    assert ds.sizes["time"] == 17
+    assert ds.sizes["node"] == 648
     if "r3d" in slf_in:
-        assert ds.sizes['plan'] == 21
+        assert ds.sizes["plan"] == 21
 
     # Coordinates
     assert "x" in ds.coords
@@ -72,7 +74,7 @@ def test_to_selafin(tmp_path, slf_in):
     assert ds_slf2.equals(ds_slf)
 
     # Compare binary files
-    with open(slf_in, 'rb') as in_slf1, open(slf_out, 'rb') as in_slf2:
+    with open(slf_in, "rb") as in_slf1, open(slf_out, "rb") as in_slf2:
         assert in_slf1.read() == in_slf2.read()
 
 
@@ -89,7 +91,7 @@ def test_to_selafin_eager_mode(tmp_path, slf_in):
     assert ds_slf2.equals(ds_slf)
 
     # Compare binary files
-    with open(slf_in, 'rb') as in_slf1, open(slf_out, 'rb') as in_slf2:
+    with open(slf_in, "rb") as in_slf1, open(slf_out, "rb") as in_slf2:
         assert in_slf1.read() == in_slf2.read()
 
 
@@ -124,3 +126,29 @@ def test_slice(tmp_path, slf_in):
         write_netcdf(ds_slice, nc_out)
         ds_nc = xr.open_dataset(nc_out)
         assert ds_nc.equals(ds_slice)
+
+
+def test_from_scratch(tmp_path):
+    slf_out = tmp_path / "test.slf"
+    x = np.random.rand(100)
+    y = np.random.rand(100)
+
+    ikle = Delaunay(np.vstack((x, y)).T).simplices
+
+    # Creating a minimal dataset
+    ds = xr.Dataset(
+        {
+            "S": (("time", "node"), np.random.rand(10, 100)),
+            # Add other variables as needed
+        },
+        coords={
+            "x": ("node", x),
+            "y": ("node", y),
+            "time": pd.date_range("2020-01-01", periods=10),
+            # Add "ikle2" or "ikle3" as required by your mesh
+        },
+    )
+    ds.attrs["ikle2"] = ikle
+
+    # Writing to a SELAFIN file
+    ds.selafin.write(slf_out)
