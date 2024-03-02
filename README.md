@@ -40,15 +40,13 @@ ds.selafin.write("output_file.slf")
 
 All attributes are optional except `ikle2`:
 
-| Attribute  | Description                                      | Default value             | 
-|------------|--------------------------------------------------|---------------------------|
-| title      | Serafin title                                    | (empty)                   |
-| float_size | Float size                                       | 4 (single precision)      |
-| endian     | File endianness                                  | ">"                       |
-| params     | Table of integer parameters                      | (can be rebuilt)          |
-| ikle2      | Connectivity table in 2D                         | -                         |
-| ikle3      | Connectivity table in 3D (only in 3D, optional)  | (can be rebuilt from 2D)  |
-| var_IDs    | List of variable identifiers                     | -                         |
-| varnames   | List of variable names (same order of var_IDs)   | (use variable identifier) |
-| varunits   | List of variable units (same order of var_IDs)   | ?                         |
-| date_start | Starting date with integers                      | (from first time serie)   |
+| Attribute  | Description                                                              | Default value            | 
+|------------|--------------------------------------------------------------------------|--------------------------|
+| title      | Serafin title                                                            | "" (empty string)        |
+| float_size | Float size                                                               | 4 (single precision)     |
+| endian     | File endianness                                                          | ">"                      |
+| params     | Table of integer parameters                                              | (can be rebuilt)         |
+| ikle2      | Connectivity table in 2D (1-indexed)                                     | -                        |
+| ikle3      | Connectivity table in 3D (1-indexed, only in 3D, optional)               | (can be rebuilt from 2D) |
+| variables  | Dictionary with variable names and units (key is variable abbreviation)  | -                        |
+| date_start | Starting date with integers                                              | (from first time serie)  |

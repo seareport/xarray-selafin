@@ -58,10 +58,14 @@ def write_serafin(fout, ds):
 
     # Variables
     for var in ds.data_vars:
-        pos = ds.var_IDs.index(var)
-        slf_header.var_IDs.append(var)
-        slf_header.var_names.append(ds.varnames[pos].ljust(16).encode(Serafin.SLF_EIT))
-        slf_header.var_units.append(ds.varunits[pos].ljust(16).encode(Serafin.SLF_EIT))
+        try:
+            name, unit = ds.attrs["variables"][var]
+            slf_header.add_variable_str(var, name, unit)
+        except KeyError:
+            try:
+                slf_header.add_variable_from_ID(var)
+            except Serafin.SerafinRequestError:
+                slf_header.add_variable_str(var, var, "?")
     slf_header.nb_var = len(slf_header.var_IDs)
 
     if "plan" in ds.dims:  # 3D
@@ -292,13 +296,13 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ds.attrs["ikle2"] = slf.header.ikle_2d
         if not is_2d:
             ds.attrs["ikle3"] = np.reshape(slf.header.ikle, (slf.header.nb_elements, ndp3))
-        ds.attrs["var_IDs"] = vars
-        ds.attrs["varnames"] = [
-            b.decode(Serafin.SLF_EIT).rstrip() for b in slf.header.var_names
-        ]
-        ds.attrs["varunits"] = [
-            b.decode(Serafin.SLF_EIT).rstrip() for b in slf.header.var_units
-        ]
+        ds.attrs["variables"] = {
+            var_ID: (
+                name.decode(Serafin.SLF_EIT).rstrip(),
+                unit.decode(Serafin.SLF_EIT).rstrip()
+            )
+            for var_ID, name, unit in slf.header.iter_on_all_variables()
+        }
         ds.attrs["date_start"] = slf.header.date
 
         return ds

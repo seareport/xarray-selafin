@@ -12,12 +12,14 @@ TIDAL_FLATS = pytest.mark.parametrize(
 
 
 def write_netcdf(ds, nc_out):
-    # Remove multi-dimensional arrays not supported in netCDF
+    # Remove dict and multi-dimensional arrays not supported in netCDF
+    del ds.attrs["variables"]
     del ds.attrs["ikle2"]
     try:
         del ds.attrs["ikle3"]
     except KeyError:
         pass
+    # Write netCDF file
     ds.to_netcdf(nc_out)
 
 
