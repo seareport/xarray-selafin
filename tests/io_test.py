@@ -133,7 +133,7 @@ def test_from_scratch(tmp_path):
     x = np.random.rand(100)
     y = np.random.rand(100)
 
-    ikle = Delaunay(np.vstack((x, y)).T).simplices
+    ikle = Delaunay(np.vstack((x, y)).T).simplices + 1  # IKLE tables are 1-indexed
 
     # Creating a minimal dataset
     ds = xr.Dataset(
@@ -145,7 +145,6 @@ def test_from_scratch(tmp_path):
             "x": ("node", x),
             "y": ("node", y),
             "time": pd.date_range("2020-01-01", periods=10),
-            # Add "ikle2" or "ikle3" as required by your mesh
         },
     )
     ds.attrs["ikle2"] = ikle
