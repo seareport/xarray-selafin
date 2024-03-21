@@ -12,6 +12,15 @@ TIDAL_FLATS = pytest.mark.parametrize(
     ],
 )
 
+DIMS = pytest.mark.parametrize(
+    "slf_in",
+    [
+        pytest.param("tests/data/r3d_tidal_flats.slf", id="3D"),
+        pytest.param("tests/data/r2d_tidal_flats.slf", id="2D"),
+        pytest.param("tests/data/r1d_tomsail.slf", id="1D"),
+    ],
+)
+
 
 def write_netcdf(ds, nc_out):
     # Remove dict and multi-dimensional arrays not supported in netCDF
@@ -29,6 +38,7 @@ def write_netcdf(ds, nc_out):
 def test_open_dataset(slf_in):
     ds = xr.open_dataset(slf_in, engine="selafin")
     assert isinstance(ds, xr.Dataset)
+    repr(ds)
 
     # Dimensions
     assert ds.sizes["time"] == 17
@@ -151,3 +161,9 @@ def test_from_scratch(tmp_path):
 
     # Writing to a SELAFIN file
     ds.selafin.write(slf_out)
+
+
+@DIMS
+def test_dim(slf_in):
+    ds = xr.open_dataset(slf_in, engine="selafin")
+    repr(ds)
