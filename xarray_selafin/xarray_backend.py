@@ -98,7 +98,7 @@ def write_serafin(fout, ds):
     else:  # 2D
         is_2d = True
         nplan = 1  # just to do a multiplication
-        slf_header.nb_nodes_per_elem = 3
+        slf_header.nb_nodes_per_elem = ds.attrs["ikle2"].shape[1]
         slf_header.nb_elements = len(ds.attrs["ikle2"])
 
     slf_header.nb_nodes = ds.sizes["node"] * nplan
@@ -284,7 +284,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
 
         # Create data variables
         data_vars = {}
-        dtype = np.float64
+        dtype = np.dtype(slf.header.np_float_type)
 
         if nplan == 0:
             shape = (len(times), npoin2)
