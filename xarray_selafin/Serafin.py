@@ -194,7 +194,7 @@ class SerafinHeader:
     def _check_dim(self):
         # verify data consistence and determine 2D or 3D
         if self.is_2d:
-            if self.nb_nodes_per_elem != 3:
+            if self.nb_nodes_per_elem not in (1, 3):
                 raise SerafinValidationError("Unknown mesh type")
         else:
             if self.nb_nodes_per_elem != 6:
