@@ -284,7 +284,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
 
         # Create data variables
         data_vars = {}
-        dtype = np.float64
+        dtype = np.dtype(slf.header.np_float_type)
 
         if nplan == 0:
             shape = (len(times), npoin2)
