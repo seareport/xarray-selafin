@@ -79,13 +79,13 @@ repos:
             "requirements/requirements.txt",
           ]
       - id: "poetry-export"
-        name: "poetry export dask"
+        name: "poetry export dev"
         args:
           [
             "--with",
-            "dask",
+            "dev",
             "-f",
             "requirements.txt",
             "-o",
-            "requirements/requirements-dask.txt",
+            "requirements/requirements-dev.txt",
           ]
