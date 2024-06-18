@@ -643,24 +643,15 @@ class SerafinHeader:
         self.set_mesh_origin(0, 0)
         self._compute_mesh_coordinates()
 
-    def signed_area(self, vertices):
-        """!
-        @brief calculate the signed area of the boundary ring (only in 2D)
-        @param vertices <[float]>: list of coordinates
-        """
-        area = 0.0
-        for i in range(len(vertices)):
-            x1, y1 = vertices[i]
-            x2, y2 = vertices[(i + 1) % len(vertices)]
-            area += (x2 - x1) * (y2 + y1)
-        return area / 2.0
-
     def is_ccw(self, vertices):
         """!
         @brief return True if the boundary is counter-clockwise (only in 2D)
         @param vertices <[float]>: list of coordinates
         """
-        return self.signed_area(vertices) < 0
+        v = np.array(vertices)
+        x = v[:, 0]
+        y = v[:, 1]
+        return np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)) < 0
 
     def get_all_edges(self):
         """Get all edges (pair of nodes)"""
