@@ -9,18 +9,17 @@ Handles Serafin file with:
 
 The sizes (file, header, frame) are in bytes (8 bits).
 """
-
 import copy
-import numpy as np
+import logging
 import os
-from shapely.geometry import LinearRing
 import struct
 
-# from .conf import settings
+import numpy as np
+
 from .variable.variables_2d import VARIABLES_2D
 from .variable.variables_3d import VARIABLES_3D
 
-import logging
+# from .conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -247,7 +246,7 @@ class SerafinHeader:
             self.nb_planes,
             self.nb_elements,
             0,
-            1
+            1,
         )
 
     def _build_ikle_2d(self):
@@ -644,6 +643,16 @@ class SerafinHeader:
         self.set_mesh_origin(0, 0)
         self._compute_mesh_coordinates()
 
+    def is_ccw(self, vertices):
+        """!
+        @brief return True if the boundary is counter-clockwise (only in 2D)
+        @param vertices <[float]>: list of coordinates
+        """
+        v = np.array(vertices)
+        x = v[:, 0]
+        y = v[:, 1]
+        return np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)) < 0
+
     def get_all_edges(self):
         """Get all edges (pair of nodes)"""
         edges = np.zeros((3 * len(self.ikle_2d), 2), dtype=np.int64)
@@ -715,13 +724,11 @@ class SerafinHeader:
 
             # Determine if boundary is clock-wise
             if len(current_boundary_nodes) > 2:
-                boundary_geom = LinearRing(
-                    [
-                        (self.x[n - 1], self.y[n - 1])
-                        for n in current_boundary_nodes[:-1]
-                    ]
-                )
-                ccw = boundary_geom.is_ccw
+                boundary_geom = [
+                    (self.x[n - 1], self.y[n - 1]) for n in current_boundary_nodes[:-1]
+                ]
+
+                ccw = self.is_ccw(boundary_geom)
             else:
                 ccw = True  # arbitrary value (order can not be defined!)
 
@@ -945,7 +952,7 @@ class SerafinHeader:
         for var_name in self.var_names:
             name = var_name.decode(encoding=SLF_EIT).strip()
             if name not in var_table:
-                slf_type = "2D" if self.is_2d else "3D"
+                # slf_type = "2D" if self.is_2d else "3D"
                 var_id = name
             else:
                 var_id = var_table[name]
@@ -1267,12 +1274,16 @@ class Write(Serafin):
         # IKLE
         nb_ikle_values = header.nb_elements * header.nb_nodes_per_elem
         self.file.write(header.pack_int(4 * nb_ikle_values))
-        self.file.write(np.array(header.ikle, dtype=np.dtype(np.int32).newbyteorder(header.endian)))
+        self.file.write(
+            np.array(header.ikle, dtype=np.dtype(np.int32).newbyteorder(header.endian))
+        )
         self.file.write(header.pack_int(4 * nb_ikle_values))
 
         # IPOBO
         self.file.write(header.pack_int(4 * header.nb_nodes))
-        self.file.write(np.array(header.ipobo, dtype=np.dtype(np.int32).newbyteorder(header.endian)))
+        self.file.write(
+            np.array(header.ipobo, dtype=np.dtype(np.int32).newbyteorder(header.endian))
+        )
         self.file.write(header.pack_int(4 * header.nb_nodes))
 
         # X coordinates
