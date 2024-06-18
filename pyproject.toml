@@ -13,16 +13,15 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.9"
 numpy = "*"
-scipy = "*"
-shapely = "*"
 xarray = "*"
-netcdf4 = "*"
 
 [tool.poetry.plugins."xarray.backends"]
 selafin = "xarray_selafin.xarray_backend:SelafinBackendEntrypoint"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
+scipy = "*"
+xarray = {version = "*",  extras = ["io"]}
 
 [build-system]
 requires = ["poetry-core"]
