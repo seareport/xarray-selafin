@@ -25,9 +25,9 @@ DIMS = pytest.mark.parametrize(
 def write_netcdf(ds, nc_out):
     # Remove dict and multi-dimensional arrays not supported in netCDF
     del ds.attrs["variables"]
-    del ds.attrs["ikle2"]
+    del ds["face"]
     try:
-        del ds.attrs["ikle3"]
+        del ds.attrs["volume"]
     except KeyError:
         pass
     # Write netCDF file
@@ -55,11 +55,11 @@ def test_open_dataset(slf_in):
     assert ds.attrs["endian"] == ">"
     assert ds.attrs["date_start"] == (1900, 1, 1, 0, 0, 0)
     assert "ipobo" in ds.attrs
-    assert "ikle2" in ds.attrs
+    assert "face" in ds.variables
     if "r3d_" in slf_in:
-        assert "ikle3" in ds.attrs
+        assert "volume" in ds.variables
     else:
-        assert "ikle3" not in ds.attrs
+        assert "volume" not in ds.variables
 
 
 @TIDAL_FLATS
@@ -155,9 +155,9 @@ def test_from_scratch(tmp_path):
             "x": ("node", x),
             "y": ("node", y),
             "time": pd.date_range("2020-01-01", periods=10),
+            "face": (("face_node_connectivity", "face_dimension"), ikle),
         },
     )
-    ds.attrs["ikle2"] = ikle
 
     # Writing to a SELAFIN file
     ds.selafin.write(slf_out)
