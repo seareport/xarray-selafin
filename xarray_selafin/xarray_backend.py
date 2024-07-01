@@ -66,11 +66,15 @@ def write_serafin(fout, ds):
             first_time = ds.time
         else:
             first_time = ds.time[0]
-        first_date_str = first_time.values.astype(str)  # "1900-01-01T00:00:00.000000000"
+        first_date_str = first_time.values.astype(
+            str
+        )  # "1900-01-01T00:00:00.000000000"
         first_date_str = first_date_str.rstrip("0") + "0"  # "1900-01-01T00:00:00.0"
         try:
-            date = datetime.strptime(first_date_str, '%Y-%m-%dT%H:%M:%S.%f')
-            slf_header.date = attrgetter("year", "month", "day", "hour", "minute", "second")(date)
+            date = datetime.strptime(first_date_str, "%Y-%m-%dT%H:%M:%S.%f")
+            slf_header.date = attrgetter(
+                "year", "month", "day", "hour", "minute", "second"
+            )(date)
         except ValueError:
             slf_header.date = DEFAULT_DATE_START
 
@@ -94,12 +98,12 @@ def write_serafin(fout, ds):
         is_2d = False
         nplan = len(ds.plan)
         slf_header.nb_nodes_per_elem = 6
-        slf_header.nb_elements = len(ds.attrs["ikle2"]) * (nplan - 1)
+        slf_header.nb_elements = len(ds["face"]) * (nplan - 1)
     else:  # 2D
         is_2d = True
         nplan = 1  # just to do a multiplication
-        slf_header.nb_nodes_per_elem = ds.attrs["ikle2"].shape[1]
-        slf_header.nb_elements = len(ds.attrs["ikle2"])
+        slf_header.nb_nodes_per_elem = ds["face"].shape[1]
+        slf_header.nb_elements = len(ds["face"])
 
     slf_header.nb_nodes = ds.sizes["node"] * nplan
     slf_header.nb_nodes_2d = ds.sizes["node"]
@@ -114,15 +118,17 @@ def write_serafin(fout, ds):
     slf_header.mesh_origin = (0, 0)  # Should be integers
     slf_header.x_stored = x - slf_header.mesh_origin[0]
     slf_header.y_stored = y - slf_header.mesh_origin[1]
-    slf_header.ikle_2d = ds.attrs["ikle2"]
+    slf_header.ikle_2d = np.array(ds["face"])
     if is_2d:
         slf_header.ikle = slf_header.ikle_2d.flatten()
     else:
         try:
-            slf_header.ikle = ds.attrs["ikle3"]
+            slf_header.ikle = ds["volume"]
         except KeyError:
             # Rebuild IKLE from 2D
-            slf_header.ikle = slf_header.compute_ikle(len(ds.plan), slf_header.nb_nodes_per_elem)
+            slf_header.ikle = slf_header.compute_ikle(
+                len(ds.plan), slf_header.nb_nodes_per_elem
+            )
 
     try:
         slf_header.ipobo = ds.attrs["ipobo"]
@@ -308,14 +314,37 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
                         data[time_index, :, :] = values.reshape(npoin2, nplan)
                 data_vars[var] = xr.Variable(dims=dims, data=data)
 
+        #  include UGRID conventions: https://ugrid-conventions.github.io/ugrid-conventions/conformance/#R102
+        # topology_dimension = 0 (points)
+        # topology_dimension = 1 (edge) > does not exist for Selafin files
+        # topology_dimension = 2 (face)
+        # topology_dimension = 3 (volume)
+
         coords = {
             "x": ("node", x[:npoin2]),
             "y": ("node", y[:npoin2]),
             "time": times,
+            "face": (("face_node_connectivity", "face_dimension"), slf.header.ikle_2d)
             # Consider how to include IPOBO (with node and plan dimensions?) if it's essential for your analysis
         }
+        if not is_2d:  # if 3D
+            ikle3 = np.reshape(slf.header.ikle, (slf.header.nb_elements, ndp3))
+            coords["volume"] = (("volume_node_connectivity", "volume_dimension"), ikle3)
+
+        # build node connectivity:
+        coords["boundary"] = (
+            "boundary_node_connectivity",
+            list(filter(lambda num: num != 0, slf.header.ipobo)),
+        )
 
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
+
+        if len(ds.face_dimension) == 1:
+            ds.attrs["topology_dimension"] = 0
+        elif len(ds.face_dimension) == 3:
+            ds.attrs["topology_dimension"] = 2
+        else:  # len(face_dimension) > 3
+            ds.attrs["topology_dimension"] = 3
 
         ds.attrs["title"] = slf.header.title.decode(Serafin.SLF_EIT).strip()
         ds.attrs["language"] = slf.header.language
@@ -323,13 +352,10 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         ds.attrs["endian"] = slf.header.endian
         ds.attrs["params"] = slf.header.params
         ds.attrs["ipobo"] = slf.header.ipobo
-        ds.attrs["ikle2"] = slf.header.ikle_2d
-        if not is_2d:
-            ds.attrs["ikle3"] = np.reshape(slf.header.ikle, (slf.header.nb_elements, ndp3))
         ds.attrs["variables"] = {
             var_ID: (
                 name.decode(Serafin.SLF_EIT).rstrip(),
-                unit.decode(Serafin.SLF_EIT).rstrip()
+                unit.decode(Serafin.SLF_EIT).rstrip(),
             )
             for var_ID, name, unit in slf.header.iter_on_all_variables()
         }
