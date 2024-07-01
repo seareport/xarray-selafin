@@ -10,6 +10,12 @@ To have the backend working in xarray, follow these steps:
 pip install xarray-selafin
 ```
 
+or, if you are using, conda:
+
+```
+conda install -c conda-forge xarray_selafin
+```
+
 ## Read Selafin
 
 ```python
