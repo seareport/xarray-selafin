@@ -26,3 +26,7 @@ xarray = {version = "*",  extras = ["io"]}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py37']
+line-length = 107

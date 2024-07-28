@@ -69,7 +69,7 @@ def write_serafin(fout, ds):
         first_date_str = first_time.values.astype(str)  # "1900-01-01T00:00:00.000000000"
         first_date_str = first_date_str.rstrip("0") + "0"  # "1900-01-01T00:00:00.0"
         try:
-            date = datetime.strptime(first_date_str, '%Y-%m-%dT%H:%M:%S.%f')
+            date = datetime.strptime(first_date_str, "%Y-%m-%dT%H:%M:%S.%f")
             slf_header.date = attrgetter("year", "month", "day", "hour", "minute", "second")(date)
         except ValueError:
             slf_header.date = DEFAULT_DATE_START
@@ -165,6 +165,8 @@ def write_serafin(fout, ds):
                 temp[iv] = ds[var]
             else:
                 temp[iv] = ds.isel(time=it)[var]
+            if slf_header.nb_planes > 1:
+                temp[iv] = np.reshape(np.ravel(temp[iv]), (slf_header.nb_nodes_2d, slf_header.nb_planes))
         resout.write_entire_frame(
             slf_header,
             t_,
@@ -233,15 +235,14 @@ class SelafinLazyArray(BackendArray):
         for it, t in enumerate(time_indices):
             temp = self.slf_reader.read_var_in_frame(t, self.var)  # shape = (nb_nodes,)
             temp = np.reshape(temp, self.shape[1:])  # shape = (nb_nodes_2d, nb_planes)
-            if node_key == slice(None) and plan_key == slice(
-                None
-            ):  # speedup if not selection
+            if node_key == slice(None) and plan_key == slice(None):  # speedup if not selection
                 data[it] = temp
             else:
                 if plan_key is None:
                     data[it] = temp[node_indices]
                 else:
-                    data[it] = temp[node_indices][:, plan_indices]
+                    values = temp[node_indices][:, plan_indices]
+                    data[it] = np.reshape(values, (len(plan_indices), len(node_indices))).T
 
         # Remove dimension if key was an integer
         if isinstance(node_key, int):
@@ -305,14 +306,15 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
                     if is_2d:
                         data[time_index, :] = values
                     else:
-                        data[time_index, :, :] = values.reshape(npoin2, nplan)
+                        data[time_index, :, :] = np.reshape(values, (nplan, npoin2)).T
                 data_vars[var] = xr.Variable(dims=dims, data=data)
 
         coords = {
             "x": ("node", x[:npoin2]),
             "y": ("node", y[:npoin2]),
             "time": times,
-            # Consider how to include IPOBO (with node and plan dimensions?) if it's essential for your analysis
+            # Consider how to include IPOBO (with node and plan dimensions?)
+            # if it's essential for your analysis
         }
 
         ds = xr.Dataset(data_vars=data_vars, coords=coords)
@@ -327,10 +329,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
         if not is_2d:
             ds.attrs["ikle3"] = np.reshape(slf.header.ikle, (slf.header.nb_elements, ndp3))
         ds.attrs["variables"] = {
-            var_ID: (
-                name.decode(Serafin.SLF_EIT).rstrip(),
-                unit.decode(Serafin.SLF_EIT).rstrip()
-            )
+            var_ID: (name.decode(Serafin.SLF_EIT).rstrip(), unit.decode(Serafin.SLF_EIT).rstrip())
             for var_ID, name, unit in slf.header.iter_on_all_variables()
         }
         ds.attrs["date_start"] = slf.header.date
