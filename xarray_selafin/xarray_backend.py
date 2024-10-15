@@ -133,7 +133,7 @@ def write_serafin(fout, ds):
     if "plan" in ds.dims:  # 3D
         slf_header.nb_planes = len(ds.plan)
         slf_header.is_2d = False
-        shape = (slf_header.nb_var, slf_header.nb_nodes_2d, slf_header.nb_planes)
+        shape = (slf_header.nb_var, slf_header.nb_planes, slf_header.nb_nodes_2d)
     else:  # 2D (converted if required)
         # if ds.attrs["type"] == "3D":
         #     slf_header.is_2d = False  # to enable conversion from 3D
@@ -166,7 +166,7 @@ def write_serafin(fout, ds):
             else:
                 temp[iv] = ds.isel(time=it)[var]
             if slf_header.nb_planes > 1:
-                temp[iv] = np.reshape(np.ravel(temp[iv]), (slf_header.nb_nodes_2d, slf_header.nb_planes))
+                temp[iv] = np.reshape(np.ravel(temp[iv]), (slf_header.nb_planes, slf_header.nb_nodes_2d))
         resout.write_entire_frame(
             slf_header,
             t_,
@@ -291,8 +291,8 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
             shape = (len(times), npoin2)
             dims = ["time", "node"]
         else:
-            shape = (len(times), npoin2, nplan)
-            dims = ["time", "node", "plan"]
+            shape = (len(times), nplan, npoin2)
+            dims = ["time", "plan", "node"]
 
         for var in vars:
             if lazy_loading:
@@ -306,7 +306,7 @@ class SelafinBackendEntrypoint(BackendEntrypoint):
                     if is_2d:
                         data[time_index, :] = values
                     else:
-                        data[time_index, :, :] = np.reshape(values, (nplan, npoin2)).T
+                        data[time_index, :, :] = np.reshape(values, (nplan, npoin2))
                 data_vars[var] = xr.Variable(dims=dims, data=data)
 
         coords = {
