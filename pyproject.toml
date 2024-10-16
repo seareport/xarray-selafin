@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xarray-selafin"
-version = "0.1.8"
+version = "0.1.9"
 description = ""
 authors = ["tomsail <saillour.thomas@gmail.com>", "lucduron <l.duron@cnr.tm.fr>"]
 readme = "README.md"
@@ -26,3 +26,7 @@ xarray = {version = "*",  extras = ["io"]}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py37']
+line-length = 107
